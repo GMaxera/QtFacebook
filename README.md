@@ -3,8 +3,20 @@ QtFacebook
 
 Code for use Facebook SDK from C++ and Qt Quick 2 in Qt 5 projects targeted on mobile devices (Android &amp; iOS)
 
-Prepare Facebook SDK for Android
+How to use for iOS platform
 ==========
+## Prepare Facebook SDK for iOS
+
+* Install the Facebook SDK package
+* Add the following flags to Qt project:
+```
+## Facebook SDK framework
+LIBS += -F/path/to/FacebookSDK -framework FacebookSDK
+```
+
+How to use for Android platform
+==========
+## Prepare Facebook SDK for Android
 
 * Unzip the facebook android sdk package
 * Inside the unzipped directory, locate the subdirectory 'facebook' and copy it in another location (in a subdirectory of your Qt project it's fine)
@@ -24,13 +36,4 @@ target=android-19
 android.library.reference.1=../../facebook
 ```
 
-Prepare Facebook SDK for iOS
-==========
-
-* Install the Facebook SDK package
-* Add the following flags to Qt project:
-```
-## Facebook SDK framework
-LIBS += -F/path/to/FacebookSDK -framework FacebookSDK
-```
 

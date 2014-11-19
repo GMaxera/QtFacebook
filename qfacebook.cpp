@@ -16,3 +16,23 @@
  * You should have received a copy of the GNU General Public License      *
  * along with this program. If not, see <http://www.gnu.org/licenses/>.   *
  * ********************************************************************** */
+
+#include "qfacebook.h"
+
+QFacebook::QFacebook(QObject *parent )
+	: QObject(parent) {
+	initPlatformData();
+}
+
+QString QFacebook::getAppID() {
+	return appID;
+}
+
+QString QFacebook::getUrlScheme() {
+	return urlScheme;
+}
+
+QFacebook::FacebookState QFacebook::getState() {
+	return state;
+}
+

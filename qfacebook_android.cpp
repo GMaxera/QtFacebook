@@ -16,3 +16,16 @@
  * You should have received a copy of the GNU General Public License      *
  * along with this program. If not, see <http://www.gnu.org/licenses/>.   *
  * ********************************************************************** */
+
+#include "qfacebook.h"
+
+void QFacebook::login() {
+}
+
+void QFacebook::setAppID( QString appID ) {
+
+}
+
+void QFacebook::setUrlScheme( QString /*urlScheme*/ ) {
+	// not used on Android platform
+}
