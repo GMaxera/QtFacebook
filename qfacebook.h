@@ -19,6 +19,7 @@
 
 #include <QObject>
 #include <QStringList>
+#include <QtQml>
 
 class QFacebookPlatformData;
 
@@ -32,11 +33,15 @@ class QFacebook : public QObject {
 	Q_ENUMS( FacebookState )
 	/*! Facebook application ID */
 	Q_PROPERTY( QString appID READ getAppID WRITE setAppID NOTIFY appIDChanged )
-	/*! Facebook URL scheme (used only on iOS platform) */
-	Q_PROPERTY( QString urlScheme READ getUrlScheme WRITE setUrlScheme NOTIFY urlSchemeChanged )
+	/*! Facebook application display name */
+	Q_PROPERTY( QString displayName READ getDisplayName WRITE setDisplayName NOTIFY displayNameChanged )
 	/*! Facebook Session Current State */
 	Q_PROPERTY( FacebookState state READ getState NOTIFY stateChanged )
 public:
+	/*! singleton type provider function for Qt Quick */
+	static QObject* qFacebookProvider(QQmlEngine *engine, QJSEngine *scriptEngine);
+	/*! singleton object provider for C++ */
+	static QFacebook* instance();
 	/*! enum of possible state for Facebook Session */
 	enum FacebookState {
 		/*! One of two initial states indicating that no valid cached token was found */
@@ -59,7 +64,6 @@ public:
 		 *  but the users token remains cached on the device for later use */
 		SessionClosed
 	};
-	QFacebook( QObject* parent=0 );
 public slots:
 	/*! perform a login into facebook
 	 *  \param permissions are an optional list of facebook permissions to ask during
@@ -67,23 +71,30 @@ public slots:
 	 *         are automatically implied even if not specified
 	 */
 	void login( QStringList permissions=QStringList() );
+	/*! close the Facebook session and clear any cached information */
+	void close();
 	/*! return the application ID */
 	QString getAppID();
 	/*! configure the application ID (it is a global settings for all future sessions) */
 	void setAppID( QString appID );
-	/*! return the url scheme used on iOS platform */
-	QString getUrlScheme();
-	/*! configure the url scheme used on iOS platform */
-	void setUrlScheme( QString urlScheme );
+	/*! return the display name of the Facebook application */
+	QString getDisplayName();
+	/*! configure the display name of Facebook application
+	 *  (it must match the name configured on the developer Facebook portal) */
+	void setDisplayName( QString displayName );
 	/*! return the current state of Facebook session */
 	FacebookState getState();
 signals:
 	void appIDChanged( QString appID );
-	void urlSchemeChanged( QString urlScheme );
+	void displayNameChanged( QString displayName );
 	void stateChanged( FacebookState state );
 private:
+	/*! singleton object */
+	QFacebook( QObject* parent=0 );
+	Q_DISABLE_COPY(QFacebook)
+
 	QString appID;
-	QString urlScheme;
+	QString displayName;
 	FacebookState state;
 	/*! Platform specific data */
 	QFacebookPlatformData* data;

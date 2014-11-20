@@ -19,8 +19,21 @@
 
 #include "qfacebook.h"
 
+QObject* QFacebook::qFacebookProvider(QQmlEngine *engine, QJSEngine *scriptEngine) {
+	Q_UNUSED(engine)
+	Q_UNUSED(scriptEngine)
+	return QFacebook::instance();
+}
+
+QFacebook* QFacebook::instance() {
+	static QFacebook* facebook = new QFacebook();
+	return facebook;
+}
+
 QFacebook::QFacebook(QObject *parent )
-	: QObject(parent) {
+	: QObject(parent)
+	, appID()
+	, displayName() {
 	initPlatformData();
 }
 
@@ -28,8 +41,8 @@ QString QFacebook::getAppID() {
 	return appID;
 }
 
-QString QFacebook::getUrlScheme() {
-	return urlScheme;
+QString QFacebook::getDisplayName() {
+	return displayName;
 }
 
 QFacebook::FacebookState QFacebook::getState() {

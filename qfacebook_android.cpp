@@ -22,10 +22,13 @@
 void QFacebook::login() {
 }
 
+void QFacebook::close() {
+}
+
 void QFacebook::setAppID( QString appID ) {
 
 }
 
-void QFacebook::setUrlScheme( QString /*urlScheme*/ ) {
-	// not used on Android platform
+void QFacebook::setDisplayName( QString displayName ) {
+
 }
