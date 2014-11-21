@@ -32,3 +32,6 @@ void QFacebook::setAppID( QString appID ) {
 void QFacebook::setDisplayName( QString displayName ) {
 
 }
+
+void QFacebook::onApplicationStateChanged(Qt::ApplicationState state) {
+}

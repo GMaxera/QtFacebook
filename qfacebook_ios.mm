@@ -19,95 +19,150 @@
 
 #include "qfacebook.h"
 #import "FacebookSDK/FacebookSDK.h"
+#import "UIKit/UIKit.h"
 #include <QString>
+
+/*! Objective-C class for responding to Facebook Notifications
+ *  --- NOT USED ----
+@interface FbNotificationObserver : NSObject
+@property QFacebook* qfacebook;
+- (void)activeSessionNotification:(NSNotification*)notification;
+- (void)closedSessionNotification:(NSNotification*)notification;
+@end
+@implementation FbNotificationObserver
+- (void)activeSessionNotification:(NSNotification*)notification {
+	NSLog(@"Facebook Notification: %@", [notification name]);
+}
+- (void)closedSessionNotification:(NSNotification*)notification {
+	NSLog(@"Facebook Notification: %@", [notification name]);
+}
+@end
+*/
+
+/*! Override the application:openURL UIApplicationDelegate adding
+ *  a category to the QIOApplicationDelegate.
+ *  The only way to do that even if it's a bit like hacking the Qt stuff
+ *  See: https://bugreports.qt-project.org/browse/QTBUG-38184
+ */
+@interface QIOSApplicationDelegate
+@end
+//! Add a category to QIOSApplicationDelegate
+@interface QIOSApplicationDelegate (QFacebookApplicationDelegate)
+@end
+//! Now add method for handling the openURL from Facebook Login
+@implementation QIOSApplicationDelegate (QFacebookApplicationDelegate)
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString*) sourceApplication annotation:(id)annotation {
+	[[FBSession activeSession] handleOpenURL:url];
+}
+@end
 
 class QFacebookPlatformData {
 public:
+	QFacebookPlatformData() {
+		/*
+		observer = [[FbNotificationObserver alloc] init];
+		[[NSNotificationCenter defaultCenter] addObserver:observer
+				selector:@selector(activeSessionNotification:)
+				name:FBSessionDidBecomeOpenActiveSessionNotification
+				object:nil];
+		[[NSNotificationCenter defaultCenter] addObserver:observer
+				selector:@selector(closedSessionNotification:)
+				name:FBSessionDidBecomeClosedActiveSessionNotification
+				object:nil];
+		*/
+	}
+	~QFacebookPlatformData() {
+		//[[NSNotificationCenter defaultCenter] removeObserver:observer];
+	}
+	//FbNotificationObserver* observer;
 };
 
 void QFacebook::initPlatformData() {
+	appID = QString::fromNSString( [FBSettings defaultAppID] );
+	displayName = QString::fromNSString( [FBSettings defaultDisplayName] );
+	switch( [[FBSession activeSession] state] ) {
+	case FBSessionStateCreated:
+		state = SessionCreated;
+		connected = false;
+		break;
+	case FBSessionStateCreatedTokenLoaded:
+		state = SessionCreatedTokenLoaded;
+		connected = false;
+		break;
+	case FBSessionStateCreatedOpening:
+		state = SessionOpening;
+		connected = false;
+		break;
+	case FBSessionStateOpen:
+		state = SessionOpen;
+		connected = true;
+		break;
+	case FBSessionStateOpenTokenExtended:
+		state = SessionOpenTokenExtended;
+		connected = true;
+		break;
+	case FBSessionStateClosedLoginFailed:
+		state = SessionClosedLoginFailed;
+		connected = false;
+		break;
+	case FBSessionStateClosed:
+		state = SessionClosed;
+		connected = false;
+		break;
+	}
 	data = new QFacebookPlatformData();
-	NSLog(@"Starting Facebook State: %d", [[FBSession activeSession] state]);
 }
 
 void QFacebook::login( QStringList permissions ) {
-
-	permissions << "email" << "public_profile";
-
+	if ( [[FBSession activeSession] isOpen] ) {
+		//! already connected - do nothing
+	}
 	NSMutableArray *nsPermissions = [NSMutableArray arrayWithCapacity:permissions.size()];
 	for( int i=0; i<permissions.size(); ++i ) {
 		[nsPermissions addObject:permissions[i].toNSString()];
 	}
-	//FBSession* fbSession = [[FBSession alloc] initWithPermissions:nsPermissions];
-
-	FBSession* fbSession = [FBSession activeSession];
-	if ( [fbSession isOpen] ) {
-		NSLog(@"FACEBOOK SESSION OPEN - Login Do Nothing");
-		return;
-	} else {
-		[fbSession initWithPermissions:nsPermissions];
-	}
-
-	/*
-	[fbSession setStateChangeHandler:^(FBSession*, FBSessionState state, NSError* error) {
-		switch( state ) {
-		case FBSessionStateCreated:
-			NSLog(@"FACEBOOK STATE NOW: CREATED");
-			break;
-		case FBSessionStateCreatedTokenLoaded:
-			NSLog(@"FACEBOOK STATE NOW: CREATED TOKEN LOADED");
-			break;
-		case FBSessionStateCreatedOpening:
-			NSLog(@"FACEBOOK STATE NOW: CREATED OPENING");
-			break;
-		case FBSessionStateOpen:
-			NSLog(@"FACEBOOK STATE NOW: OPEN");
-			break;
-		case FBSessionStateOpenTokenExtended:
-			NSLog(@"FACEBOOK STATE NOW: OPEN TOKEN EXTENDED");
-			break;
-		case FBSessionStateClosedLoginFailed:
-			NSLog(@"FACEBOOK STATE NOW: LOGIN FAILED");
-			break;
-		case FBSessionStateClosed:
-			NSLog(@"FACEBOOK STATE NOW: CLOSED");
-			break;
-		}
-	}];
-	*/
-	//[FBSession setActiveSession:fbSession];
-	// for forcing the in-app login using webview: FBSessionLoginBehaviorForcingWebView
-	// default FBSessionLoginBehaviorWithFallbackToWebView
-	[fbSession openWithBehavior:FBSessionLoginBehaviorWithFallbackToWebView
-				completionHandler:^(FBSession*, FBSessionState state, NSError* error) {
+	FBSession* fbSession = [[FBSession alloc] initWithPermissions:nsPermissions];
+	[fbSession setStateChangeHandler:^(FBSession*, FBSessionState fstate, NSError* error) {
 		if (error) {
 			NSLog(@"error:%@",error);
 		}
-		NSLog(@"FACEBOOK STATE NOW: %d", state);
-		switch( state ) {
+		switch( fstate ) {
 		case FBSessionStateCreated:
-			NSLog(@"FACEBOOK STATE NOW: CREATED");
+			state = SessionCreated;
+			connected = false;
 			break;
 		case FBSessionStateCreatedTokenLoaded:
-			NSLog(@"FACEBOOK STATE NOW: CREATED TOKEN LOADED");
+			state = SessionCreatedTokenLoaded;
+			connected = false;
 			break;
 		case FBSessionStateCreatedOpening:
-			NSLog(@"FACEBOOK STATE NOW: CREATED OPENING");
+			state = SessionOpening;
+			connected = false;
 			break;
 		case FBSessionStateOpen:
-			NSLog(@"FACEBOOK STATE NOW: OPEN");
+			state = SessionOpen;
+			connected = true;
 			break;
 		case FBSessionStateOpenTokenExtended:
-			NSLog(@"FACEBOOK STATE NOW: OPEN TOKEN EXTENDED");
+			state = SessionOpenTokenExtended;
+			connected = true;
 			break;
 		case FBSessionStateClosedLoginFailed:
-			NSLog(@"FACEBOOK STATE NOW: LOGIN FAILED");
+			state = SessionClosedLoginFailed;
+			connected = false;
 			break;
 		case FBSessionStateClosed:
-			NSLog(@"FACEBOOK STATE NOW: CLOSED");
+			state = SessionClosed;
+			connected = false;
 			break;
 		}
+		emit stateChanged( state );
+		emit connectedChanged( connected );
 	}];
+	[FBSession setActiveSession:fbSession];
+	// for forcing the in-app login using webview: FBSessionLoginBehaviorForcingWebView
+	// default FBSessionLoginBehaviorWithFallbackToWebView
+	[fbSession openWithBehavior:FBSessionLoginBehaviorWithFallbackToWebView completionHandler:nil];
 }
 
 void QFacebook::close() {
@@ -127,5 +182,11 @@ void QFacebook::setDisplayName( QString displayName ) {
 		this->displayName = displayName;
 		[FBSettings setDefaultDisplayName:(this->displayName.toNSString())];
 		emit displayNameChanged( this->displayName );
+	}
+}
+
+void QFacebook::onApplicationStateChanged(Qt::ApplicationState state) {
+	if ( state == Qt::ApplicationActive ) {
+		[[FBSession activeSession] handleDidBecomeActive];
 	}
 }

@@ -19,6 +19,7 @@
 
 #include <QObject>
 #include <QStringList>
+#include <QtGui/QGuiApplication>
 #include <QtQml>
 
 class QFacebookPlatformData;
@@ -35,7 +36,9 @@ class QFacebook : public QObject {
 	Q_PROPERTY( QString appID READ getAppID WRITE setAppID NOTIFY appIDChanged )
 	/*! Facebook application display name */
 	Q_PROPERTY( QString displayName READ getDisplayName WRITE setDisplayName NOTIFY displayNameChanged )
-	/*! Facebook Session Current State */
+	/*! True if the login into Facebook has been done and the session is active, False otherwise */
+	Q_PROPERTY( bool connected READ getConnected NOTIFY connectedChanged )
+	/*! Facebook Session Current State (detailed state as returned by Facebook SDK) */
 	Q_PROPERTY( FacebookState state READ getState NOTIFY stateChanged )
 public:
 	/*! singleton type provider function for Qt Quick */
@@ -82,12 +85,18 @@ public slots:
 	/*! configure the display name of Facebook application
 	 *  (it must match the name configured on the developer Facebook portal) */
 	void setDisplayName( QString displayName );
+	/*! True if connected to Facebook and session is active; false otherwise */
+	bool getConnected();
 	/*! return the current state of Facebook session */
 	FacebookState getState();
 signals:
 	void appIDChanged( QString appID );
 	void displayNameChanged( QString displayName );
+	void connectedChanged( bool connected );
 	void stateChanged( FacebookState state );
+private slots:
+	//! handle the return to the active state for supporting app-switch login
+	void onApplicationStateChanged(Qt::ApplicationState state);
 private:
 	/*! singleton object */
 	QFacebook( QObject* parent=0 );
@@ -95,6 +104,7 @@ private:
 
 	QString appID;
 	QString displayName;
+	bool connected;
 	FacebookState state;
 	/*! Platform specific data */
 	QFacebookPlatformData* data;

@@ -31,10 +31,10 @@ QFacebook* QFacebook::instance() {
 }
 
 QFacebook::QFacebook(QObject *parent )
-	: QObject(parent)
-	, appID()
-	, displayName() {
+	: QObject(parent) {
 	initPlatformData();
+	connect( qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
+			 this, SLOT(onApplicationStateChanged(Qt::ApplicationState)) );
 }
 
 QString QFacebook::getAppID() {
@@ -43,6 +43,10 @@ QString QFacebook::getAppID() {
 
 QString QFacebook::getDisplayName() {
 	return displayName;
+}
+
+bool QFacebook::getConnected() {
+	return connected;
 }
 
 QFacebook::FacebookState QFacebook::getState() {

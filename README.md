@@ -36,6 +36,10 @@ LIBS += -F/path/to/FacebookSDK -framework FacebookSDK
 ```
 If you don't specity the URL Scheme into Info.plist the login using the fast-app switching will not work, and the login will happens using a popup webview into the application (that in same case are better).
 
+## Warnings and Know issues
+In order to integrate the Facebook SDK into iOS application, some delegates needs to be implemented. One of those, regards the UIApplicationDelegate application:openURL:sourceApplication:annotation. In a fully native iOS application this is not a problem, but in Qt application there is already one delegate, QIOSApplicationDelegate, used by Qt and cannot be specified more than one delegate. At the moment there is a bug opened for solving this issues (QTBUG-38184), and in the meanwhile the only way is to exploit the functionality of Objective-C and do some sort of hacking to implement the delegate into QIOSApplicationDelegate.
+This sort of hack use the Objective-C categories, and if in your project there is only QtFacebook that do this kind of hack to QIOSApplicationDelegate then all is fine. But, this way to solve the problem may conflict with some other libraries that apply the same hack to solve this issues. Pay attention.
+
 How to use for Android platform
 ==========
 ## Prepare Facebook SDK for Android
