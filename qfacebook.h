@@ -110,4 +110,5 @@ private:
 	QFacebookPlatformData* data;
 	/*! initialized the platform specific data */
 	void initPlatformData();
+	friend class QFacebookPlatformData;
 };
