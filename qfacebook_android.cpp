@@ -19,7 +19,14 @@
 
 #include "qfacebook.h"
 
-void QFacebook::login() {
+class QFacebookPlatformData {
+public:
+};
+
+void QFacebook::initPlatformData() {
+}
+
+void QFacebook::login( QStringList permissions ) {
 }
 
 void QFacebook::close() {

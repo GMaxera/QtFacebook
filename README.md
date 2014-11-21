@@ -15,6 +15,13 @@ How to use for iOS platform
 ```
 ## Facebook SDK framework
 LIBS += -F/path/to/FacebookSDK -framework FacebookSDK
+INCLUDEPATH += /path/to/QtFacebook
+HEADERS += \
+	/path/to/QtFacebook/qfacebook.h
+SOURCES += \
+	/path/to/QtFacebook/qfacebook.cpp
+OBJECTIVE_SOURCES += \
+	/path/to/QtFacebook/qfacebook_ios.mm
 ```
 * For a better integration with Facebook app, specify the application ID, display name and Url scheme into Info.plist:
 ```
@@ -61,6 +68,32 @@ target=android-19
 ## Reference to the Facebook SDK
 android.library.reference.1=../../facebook
 ```
+* For a better integration of Facebook SDK, edit the AndroidManifest.xml and add the following tags into the <application> tag:
+```
+<activity android:name="com.facebook.LoginActivity" android:label="@string/app_name" android:theme="@android:style/Theme.Translucent.NoTitleBar"></activity>
+<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/app_id"/>
+```
+* Check that AndroidManifest.xml contains the permission for using Internet:
+```
+<uses-permission android:name="android.permission.INTERNET"/>
+```
+* Edit the 'res/values/strings.xml' file present into the Android package source and add the following lines with Facebook display name and application id:
+```
+<string name="app_name">Display Name of Facebook App</string>
+<string name="app_id">2281942447348331</string>
+```
+* Copy the Java bindings sources of QtFacebook into the 'src' folder of Android package source mantaining the directory structure (needed by Java to resolve the java packages). So, you should get a path like: Android/src/org/gmaxera/qtfacebook/QFacebookBinding.java
+* In your Qt project add the following option:
+```
+QT += androidextras
+INCLUDEPATH += /path/to/QtFacebook
+HEADERS += \
+	/path/to/QtFacebook/qfacebook.h
+SOURCES += \
+	/path/to/QtFacebook/qfacebook.cpp \
+	/path/to/QtFacebook/qfacebook_android.cpp
+```
+
 
 How to use in Qt Quick
 ==========
