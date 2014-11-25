@@ -99,26 +99,36 @@ public class QFacebookBinding implements Session.StatusCallback {
 		switch (state) {
 		case CLOSED:
 			Log.i("QFacebook", "Facebook State is CLOSED");
+			onFacebookStateChanged( 6 );
 		break;
 		case CLOSED_LOGIN_FAILED:
 			Log.i("QFacebook", "Facebook State is CLOSED_LOGIN_FAILED");
+			onFacebookStateChanged( 5 );
 		break;
 		case CREATED:
 			Log.i("QFacebook", "Facebook State is CREATED");
+			onFacebookStateChanged( 0 );
 		break;
 		case CREATED_TOKEN_LOADED:
 			Log.i("QFacebook", "Facebook State is CREATED_TOKEN_LOADED");
+			onFacebookStateChanged( 1 );
 		break;
 		case OPENING:
 			Log.i("QFacebook", "Facebook State is OPENING");
+			onFacebookStateChanged( 2 );
 		break;
 		case OPENED:
 			Log.i("QFacebook", "Facebook State is OPENED");
+			onFacebookStateChanged( 3 );
 		break;
 		case OPENED_TOKEN_UPDATED:
 			Log.i("QFacebook", "Facebook State is OPENED_TOKEN_UPDATED");
+			onFacebookStateChanged( 4 );
 		break;
 		}
 	}
+
+	// Send back to the private slot on QFacebook class
+	private static native void onFacebookStateChanged( int newstate );
 
 }

@@ -59,24 +59,24 @@ public:
 	/*! enum of possible state for Facebook Session */
 	enum FacebookState {
 		/*! One of two initial states indicating that no valid cached token was found */
-		SessionCreated,
+		SessionCreated = 0,
 		/*! One of two initial session states indicating that a cached token was loaded;
 		 *  when a session is in this state, a call to login will result in an open session,
 		 *  without UX or app-switching */
-		SessionCreatedTokenLoaded,
+		SessionCreatedTokenLoaded = 1,
 		/*! One of three pre-open session states indicating that an attempt to open
 		 *  the session is underway */
-		SessionOpening,
+		SessionOpening = 2,
 		/*! Open session state indicating user has logged in or a cached token is available */
-		SessionOpen,
+		SessionOpen = 3,
 		/*! Open session state indicating token has been extended, or the user has
 		 *  granted additional permissions */
-		SessionOpenTokenExtended,
+		SessionOpenTokenExtended = 4,
 		/*! Closed session state indicating that a login attempt failed */
-		SessionClosedLoginFailed,
+		SessionClosedLoginFailed = 5,
 		/*! Closed session state indicating that the session was closed,
 		 *  but the users token remains cached on the device for later use */
-		SessionClosed
+		SessionClosed = 6
 	};
 public slots:
 	/*! perform a login into facebook */
@@ -114,6 +114,8 @@ signals:
 private slots:
 	//! handle the return to the active state for supporting app-switch login
 	void onApplicationStateChanged(Qt::ApplicationState state);
+	//! handle the changing of the underlying Facebook session state
+	void onFacebookStateChanged( int newstate );
 private:
 	/*! singleton object */
 	QFacebook( QObject* parent=0 );

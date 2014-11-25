@@ -51,36 +51,29 @@ public:
 		}
 		switch( fstate ) {
 		case FBSessionStateCreated:
-			qFacebook->state = QFacebook::SessionCreated;
-			qFacebook->connected = false;
+			qFacebook->onFacebookStateChanged( QFacebook::SessionCreated );
 			break;
 		case FBSessionStateCreatedTokenLoaded:
-			qFacebook->state = QFacebook::SessionCreatedTokenLoaded;
-			qFacebook->connected = false;
+			qFacebook->onFacebookStateChanged( QFacebook::SessionCreatedTokenLoaded );
 			break;
 		case FBSessionStateCreatedOpening:
+			qFacebook->onFacebookStateChanged( QFacebook::SessionCreatedTokenLoaded );
 			qFacebook->state = QFacebook::SessionOpening;
 			qFacebook->connected = false;
 			break;
 		case FBSessionStateOpen:
-			qFacebook->state = QFacebook::SessionOpen;
-			qFacebook->connected = true;
+			qFacebook->onFacebookStateChanged( QFacebook::SessionOpen );
 			break;
 		case FBSessionStateOpenTokenExtended:
-			qFacebook->state = QFacebook::SessionOpenTokenExtended;
-			qFacebook->connected = true;
+			qFacebook->onFacebookStateChanged( QFacebook::SessionOpenTokenExtended );
 			break;
 		case FBSessionStateClosedLoginFailed:
-			qFacebook->state = QFacebook::SessionClosedLoginFailed;
-			qFacebook->connected = false;
+			qFacebook->onFacebookStateChanged( QFacebook::SessionClosedLoginFailed );
 			break;
 		case FBSessionStateClosed:
-			qFacebook->state = QFacebook::SessionClosed;
-			qFacebook->connected = false;
+			qFacebook->onFacebookStateChanged( QFacebook::SessionClosed );
 			break;
 		}
-		emit qFacebook->stateChanged( qFacebook->state );
-		emit qFacebook->connectedChanged( qFacebook->connected );
 	}
 	//! subset of requestPermissions that only allow reading from Facebook
 	NSMutableArray* readPermissions;

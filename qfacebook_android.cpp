@@ -25,12 +25,14 @@
 class QFacebookPlatformData {
 public:
 	QString jClassName;
+	void registerNativeMethods();
 };
 
 void QFacebook::initPlatformData() {
 	displayName = "Not used on Android";
 	data = new QFacebookPlatformData();
 	data->jClassName = "org/gmaxera/qtfacebook/QFacebookBinding";
+	data->registerNativeMethods();
 	// Get the default application ID
 	QAndroidJniObject defAppId = QAndroidJniObject::callStaticObjectMethod<jstring>(
 				"com.facebook.Settings",
@@ -98,4 +100,27 @@ void QFacebook::addRequestPermission( QString requestPermission ) {
 void QFacebook::onApplicationStateChanged(Qt::ApplicationState state) {
 	Q_UNUSED(state);
 	// NOT USED
+}
+
+static void fromJavaOnFacebookStateChanged(JNIEnv *env, jobject thiz, jint newstate) {
+	Q_UNUSED(env)
+	Q_UNUSED(thiz)
+	int state = newstate;
+	QMetaObject::invokeMethod(QFacebook::instance(), "onFacebookStateChanged",
+							  Qt::QueuedConnection,
+							  Q_ARG(int, state));
+}
+
+void QFacebookPlatformData::registerNativeMethods() {
+	JNINativeMethod methods[] {
+		{"onFacebookStateChanged", "(I)V", reinterpret_cast<void *>(fromJavaOnFacebookStateChanged)}
+	};
+
+	QAndroidJniObject javaClass(jClassName.toLatin1().data());
+	QAndroidJniEnvironment env;
+	jclass objectClass = env->GetObjectClass(javaClass.object<jobject>());
+	env->RegisterNatives(objectClass,
+						 methods,
+						 sizeof(methods) / sizeof(methods[0]));
+	env->DeleteLocalRef(objectClass);
 }

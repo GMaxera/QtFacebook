@@ -61,6 +61,13 @@ QFacebook::FacebookState QFacebook::getState() {
 	return state;
 }
 
+void QFacebook::onFacebookStateChanged( int newstate ) {
+	state = (FacebookState)newstate;
+	connected = ( state == SessionOpen || state == SessionOpenTokenExtended );
+	emit stateChanged( state );
+	emit connectedChanged( connected );
+}
+
 bool QFacebook::isReadPermission( QString permission ) {
 	// FIXME: Does not contains all permissions listed here:
 	// https://developers.facebook.com/docs/facebook-login/permissions/v2.2
