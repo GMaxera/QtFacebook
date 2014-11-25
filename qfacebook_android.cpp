@@ -39,7 +39,7 @@ void QFacebook::initPlatformData() {
 	qDebug() << "QFacebook Initialization:" << appID;
 }
 
-void QFacebook::login( QStringList permissions ) {
+void QFacebook::login() {
 	// call the java implementation
 	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(), "login" );
 }
@@ -52,8 +52,50 @@ void QFacebook::setAppID( QString appID ) {
 }
 
 void QFacebook::setDisplayName( QString displayName ) {
+	Q_UNUSED(displayName)
+	// NOT USED
+}
 
+void QFacebook::setRequestPermissions( QStringList requestPermissions ) {
+	this->requestPermissions = requestPermissions;
+	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(), "readPermissionsClear" );
+	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(), "writePermissionsClear" );
+	foreach( QString permission, this->requestPermissions ) {
+		if ( isReadPermission(permission) ) {
+			QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(),
+													   "readPermissionsAdd",
+													   "(Ljava/lang/String;)V",
+								QAndroidJniObject::fromString(permission).object<jstring>());
+		} else {
+			QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(),
+													   "writePermissionsAdd",
+													   "(Ljava/lang/String;)V",
+							 QAndroidJniObject::fromString(permission).object<jstring>());
+		}
+	}
+	emit requestPermissionsChanged( this->requestPermissions );
+}
+
+void QFacebook::addRequestPermission( QString requestPermission ) {
+	if ( !requestPermissions.contains(requestPermission) ) {
+		// add the permission
+		requestPermissions.append( requestPermission );
+		if ( isReadPermission(requestPermission) ) {
+			QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(),
+													   "readPermissionsAdd",
+													   "(Ljava/lang/String;)V",
+								QAndroidJniObject::fromString(requestPermission).object<jstring>());
+		} else {
+			QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(),
+													   "writePermissionsAdd",
+													   "(Ljava/lang/String;)V",
+								QAndroidJniObject::fromString(requestPermission).object<jstring>());
+		}
+		emit requestPermissionsChanged(requestPermissions);
+	}
 }
 
 void QFacebook::onApplicationStateChanged(Qt::ApplicationState state) {
+	Q_UNUSED(state);
+	// NOT USED
 }

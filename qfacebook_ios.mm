@@ -82,6 +82,10 @@ public:
 		emit qFacebook->stateChanged( qFacebook->state );
 		emit qFacebook->connectedChanged( qFacebook->connected );
 	}
+	//! subset of requestPermissions that only allow reading from Facebook
+	NSMutableArray* readPermissions;
+	//! subset of requestPermissions that allow writing to Facebook
+	NSMutableArray* writePermissions;
 };
 
 void QFacebook::initPlatformData() {
@@ -89,6 +93,8 @@ void QFacebook::initPlatformData() {
 	displayName = QString::fromNSString( [FBSettings defaultDisplayName] );
 	data = new QFacebookPlatformData();
 	data->qFacebook = this;
+	data->readPermissions = [[NSMutableArray alloc] init];
+	data->writePermissions = [[NSMutableArray alloc] init];
 	[[FBSession activeSession]
 			setStateChangeHandler:^(FBSession* session, FBSessionState state, NSError* error) {
 				data->sessionStateHandler(session, state, error);
@@ -96,12 +102,8 @@ void QFacebook::initPlatformData() {
 	data->sessionStateHandler( [FBSession activeSession], [[FBSession activeSession] state], NULL );
 }
 
-void QFacebook::login( QStringList permissions ) {
-	NSMutableArray *nsPermissions = [NSMutableArray arrayWithCapacity:permissions.size()];
-	for( int i=0; i<permissions.size(); ++i ) {
-		[nsPermissions addObject:permissions[i].toNSString()];
-	}
-	FBSession* fbSession = [[FBSession alloc] initWithPermissions:nsPermissions];
+void QFacebook::login() {
+	FBSession* fbSession = [[FBSession alloc] initWithPermissions:(data->readPermissions)];
 	[fbSession setStateChangeHandler:^(FBSession* session, FBSessionState state, NSError* error) {
 		data->sessionStateHandler(session, state, error);
 	}];
@@ -128,6 +130,33 @@ void QFacebook::setDisplayName( QString displayName ) {
 		this->displayName = displayName;
 		[FBSettings setDefaultDisplayName:(this->displayName.toNSString())];
 		emit displayNameChanged( this->displayName );
+	}
+}
+
+void QFacebook::setRequestPermissions( QStringList requestPermissions ) {
+	this->requestPermissions = requestPermissions;
+	[(data->readPermissions) removeAllObjects];
+	[(data->writePermissions) removeAllObjects];
+	foreach( QString permission, this->requestPermissions ) {
+		if ( isReadPermission(permission) ) {
+			[(data->readPermissions) addObject:permission.toNSString()];
+		} else {
+			[(data->writePermissions) addObject:permission.toNSString()];
+		}
+	}
+	emit requestPermissionsChanged( this->requestPermissions );
+}
+
+void QFacebook::addRequestPermission( QString requestPermission ) {
+	if ( !requestPermissions.contains(requestPermission) ) {
+		// add the permission
+		requestPermissions.append( requestPermission );
+		if ( isReadPermission(requestPermission) ) {
+			[(data->readPermissions) addObject:requestPermission.toNSString()];
+		} else {
+			[(data->writePermissions) addObject:requestPermission.toNSString()];
+		}
+		emit requestPermissionsChanged(requestPermissions);
 	}
 }
 

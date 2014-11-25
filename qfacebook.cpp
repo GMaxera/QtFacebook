@@ -49,7 +49,25 @@ bool QFacebook::getConnected() {
 	return connected;
 }
 
+QStringList QFacebook::getRequestPermissions() {
+	return requestPermissions;
+}
+
+QStringList QFacebook::getGrantedPermissions() {
+	return grantedPermissions;
+}
+
 QFacebook::FacebookState QFacebook::getState() {
 	return state;
+}
+
+bool QFacebook::isReadPermission( QString permission ) {
+	// FIXME: Does not contains all permissions listed here:
+	// https://developers.facebook.com/docs/facebook-login/permissions/v2.2
+	static QStringList knowRead = QStringList()
+		<< "public_profile"
+		<< "user_friends"
+		<< "email";
+	return knowRead.contains( permission );
 }
 

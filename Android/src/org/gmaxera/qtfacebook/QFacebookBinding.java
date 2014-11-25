@@ -21,10 +21,31 @@ public class QFacebookBinding implements Session.StatusCallback {
 	private Activity activity = null;
 	// Used by Facebook SDK for handling UI transitions
 	private UiLifecycleHelper uiLifecycleHelper = null;
+	//! subset of requestPermissions that only allow reading from Facebook
+	ArrayList<String> readPermissions = new ArrayList<String>();
+	//! subset of requestPermissions that allow writing to Facebook
+	ArrayList<String> writePermissions = new ArrayList<String>();
 
 	// private constructor
 	private QFacebookBinding() {
 		// nothing to do here
+	}
+
+	//! Clear the readPermissions list
+	static public void readPermissionsClear() {
+		m_instance.readPermissions.clear();
+	}
+	//! Add a permission to the read permissions list
+	static public void readPermissionsAdd( String permission ) {
+		m_instance.readPermissions.add( permission );
+	}
+	//! Clear the writePermissions list
+	static public void writePermissionsClear() {
+		m_instance.writePermissions.clear();
+	}
+	//! Add a permission to the write permissions list
+	static public void writePermissionsAdd( String permission ) {
+		m_instance.writePermissions.add( permission );
 	}
 
 	//! This has to be called inside the onCreate of Activity
@@ -54,10 +75,7 @@ public class QFacebookBinding implements Session.StatusCallback {
 	// Perform the login into Facebook
 	static public void login() {
 		Session.OpenRequest request = new Session.OpenRequest(m_instance.activity);
-		ArrayList<String> readPermissions = new ArrayList<String>();
-		readPermissions.add("public_profile");
-		readPermissions.add("email");
-		request.setPermissions( readPermissions );
+		request.setPermissions( m_instance.readPermissions );
 		if (Session.getActiveSession() == null || Session.getActiveSession().isClosed()) {
 			Session session = new Session.Builder( m_instance.activity.getApplicationContext() ).build();
 			Session.setActiveSession(session);

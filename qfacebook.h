@@ -40,6 +40,17 @@ class QFacebook : public QObject {
 	Q_PROPERTY( bool connected READ getConnected NOTIFY connectedChanged )
 	/*! Facebook Session Current State (detailed state as returned by Facebook SDK) */
 	Q_PROPERTY( FacebookState state READ getState NOTIFY stateChanged )
+	/*! The list of all requested permissions; use this to configure the permission needed
+	 *  by your application
+	 *  Any changes in the requestPermissions does not immediately correspond to a change into
+	 *  the actual granted permissions on the active Facebook session. The permissions will be requested
+	 *  and (if user allow) granted only during the Facebook operation that requires the permissions.
+	 *  For example, during the login none of write permissions will be requested even if they are in
+	 *  this list.
+	 */
+	Q_PROPERTY( QStringList requestPermissions READ getRequestPermissions WRITE setRequestPermissions NOTIFY requestPermissionsChanged )
+	/*! The list of all granted permissions (may differs from what you request on requestPermissions) */
+	Q_PROPERTY( QStringList grantedPermissions READ getGrantedPermissions NOTIFY grantedPermissionsChanged )
 public:
 	/*! singleton type provider function for Qt Quick */
 	static QObject* qFacebookProvider(QQmlEngine *engine, QJSEngine *scriptEngine);
@@ -68,12 +79,8 @@ public:
 		SessionClosed
 	};
 public slots:
-	/*! perform a login into facebook
-	 *  \param permissions are an optional list of facebook permissions to ask during
-	 *         the login. The default permissions 'email', 'public_profile' and 'user_friends'
-	 *         are automatically implied even if not specified
-	 */
-	void login( QStringList permissions=QStringList() );
+	/*! perform a login into facebook */
+	void login();
 	/*! close the Facebook session and clear any cached information */
 	void close();
 	/*! return the application ID */
@@ -89,11 +96,21 @@ public slots:
 	bool getConnected();
 	/*! return the current state of Facebook session */
 	FacebookState getState();
+	/*! return the list of requested permissions */
+	QStringList getRequestPermissions();
+	/*! change the whole list of request permissions */
+	void setRequestPermissions( QStringList requestPermissions );
+	/*! add a new permission to request permission */
+	void addRequestPermission( QString requestPermission );
+	/*! return the current granted permissions from the active Facebook session */
+	QStringList getGrantedPermissions();
 signals:
 	void appIDChanged( QString appID );
 	void displayNameChanged( QString displayName );
 	void connectedChanged( bool connected );
 	void stateChanged( FacebookState state );
+	void requestPermissionsChanged( QStringList requestPermissions );
+	void grantedPermissionsChanged( QStringList grantedPermissions );
 private slots:
 	//! handle the return to the active state for supporting app-switch login
 	void onApplicationStateChanged(Qt::ApplicationState state);
@@ -102,10 +119,17 @@ private:
 	QFacebook( QObject* parent=0 );
 	Q_DISABLE_COPY(QFacebook)
 
+	/*! check if a requested permission is read-only or write
+	 *  If it doesn't recognize the permission, it will be considered write permission
+	 */
+	bool isReadPermission( QString permission );
+
 	QString appID;
 	QString displayName;
 	bool connected;
 	FacebookState state;
+	QStringList requestPermissions;
+	QStringList grantedPermissions;
 	/*! Platform specific data */
 	QFacebookPlatformData* data;
 	/*! initialized the platform specific data */
