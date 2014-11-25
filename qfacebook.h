@@ -34,7 +34,7 @@ class QFacebook : public QObject {
 	Q_ENUMS( FacebookState )
 	/*! Facebook application ID */
 	Q_PROPERTY( QString appID READ getAppID WRITE setAppID NOTIFY appIDChanged )
-	/*! Facebook application display name */
+	/*! Facebook application display name (used only on iOS platform) */
 	Q_PROPERTY( QString displayName READ getDisplayName WRITE setDisplayName NOTIFY displayNameChanged )
 	/*! True if the login into Facebook has been done and the session is active, False otherwise */
 	Q_PROPERTY( bool connected READ getConnected NOTIFY connectedChanged )

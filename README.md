@@ -83,6 +83,34 @@ android.library.reference.1=../../facebook
 <string name="app_id">2281942447348331</string>
 ```
 * Copy the Java bindings sources of QtFacebook into the 'src' folder of Android package source mantaining the directory structure (needed by Java to resolve the java packages). So, you should get a path like: Android/src/org/gmaxera/qtfacebook/QFacebookBinding.java
+* Create a custom Activity for your app extending from QtActivity (this is needed because there are some methods that interacts with Facebook login/share flows), and override the following methods:
+```
+import org.qtproject.qt5.android.bindings.QtActivity;
+import org.gmaxera.qtfacebook.QFacebookBinding;
+
+public class MyCustomAppActivity extends QtActivity {
+	@Override
+	public void onCreate(Bundle bundle) {
+		super.onCreate(bundle);
+		QFacebookBinding.onCreate(this, bundle);
+	}
+	@Override
+	protected void onResume() {
+		super.onResume();
+		QFacebookBinding.onResume();
+	}
+	@Override
+	public void onDestroy() {
+		QFacebookBinding.onDestroy();
+		super.onDestroy();
+	}
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		QFacebookBinding.onActivityResult(requestCode, resultCode, data);
+	}
+}
+```
 * In your Qt project add the following option:
 ```
 QT += androidextras

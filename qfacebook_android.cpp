@@ -18,15 +18,30 @@
  * ********************************************************************** */
 
 #include "qfacebook.h"
+#include <QString>
+#include <QtAndroidExtras>
+#include <QDebug>
 
 class QFacebookPlatformData {
 public:
+	QString jClassName;
 };
 
 void QFacebook::initPlatformData() {
+	displayName = "Not used on Android";
+	data = new QFacebookPlatformData();
+	data->jClassName = "org/gmaxera/qtfacebook/QFacebookBinding";
+	// Get the default application ID
+	QAndroidJniObject defAppId = QAndroidJniObject::callStaticObjectMethod<jstring>(
+				"com.facebook.Settings",
+				"getApplicationId" );
+	appID = defAppId.toString();
+	qDebug() << "QFacebook Initialization:" << appID;
 }
 
 void QFacebook::login( QStringList permissions ) {
+	// call the java implementation
+	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(), "login" );
 }
 
 void QFacebook::close() {
