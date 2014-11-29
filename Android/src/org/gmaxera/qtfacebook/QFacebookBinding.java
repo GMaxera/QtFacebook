@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.util.Log;
 import android.content.Intent;
 import java.util.ArrayList;
+import java.util.List;
 
 /*! Java class for bind the C++ method of QFacebook to the
  *  java implementation using the native Facebook SDK for Android
@@ -83,9 +84,14 @@ public class QFacebookBinding implements Session.StatusCallback {
 		Session.getActiveSession().openForRead( request );
 	}
 
+	// Perform the logout and clear any token information
+	static public void close() {
+		Session.getActiveSession().closeAndClearTokenInformation();
+	}
+
 	// The Session.StatusCallback method
 	@Override
-	public void call(Session psession, SessionState state, Exception exception) {
+	public void call(Session session, SessionState state, Exception exception) {
 		// check if there was an exception
 		if (exception != null) {
 			if (exception instanceof FacebookOperationCanceledException &&
@@ -96,39 +102,45 @@ public class QFacebookBinding implements Session.StatusCallback {
 			}
 		}
 		// check the current state and acts accordlying
+		List<String> grantedPermissions;
+		String[] perms;
 		switch (state) {
 		case CLOSED:
 			Log.i("QFacebook", "Facebook State is CLOSED");
-			onFacebookStateChanged( 6 );
+			onFacebookStateChanged( 6, new String[0] );
 		break;
 		case CLOSED_LOGIN_FAILED:
 			Log.i("QFacebook", "Facebook State is CLOSED_LOGIN_FAILED");
-			onFacebookStateChanged( 5 );
+			onFacebookStateChanged( 5, new String[0] );
 		break;
 		case CREATED:
 			Log.i("QFacebook", "Facebook State is CREATED");
-			onFacebookStateChanged( 0 );
+			onFacebookStateChanged( 0, new String[0] );
 		break;
 		case CREATED_TOKEN_LOADED:
 			Log.i("QFacebook", "Facebook State is CREATED_TOKEN_LOADED");
-			onFacebookStateChanged( 1 );
+			onFacebookStateChanged( 1, new String[0] );
 		break;
 		case OPENING:
 			Log.i("QFacebook", "Facebook State is OPENING");
-			onFacebookStateChanged( 2 );
+			onFacebookStateChanged( 2, new String[0] );
 		break;
 		case OPENED:
 			Log.i("QFacebook", "Facebook State is OPENED");
-			onFacebookStateChanged( 3 );
+			grantedPermissions = session.getPermissions();
+			perms = grantedPermissions.toArray(new String[grantedPermissions.size()]);
+			onFacebookStateChanged( 3, perms );
 		break;
 		case OPENED_TOKEN_UPDATED:
 			Log.i("QFacebook", "Facebook State is OPENED_TOKEN_UPDATED");
-			onFacebookStateChanged( 4 );
+			grantedPermissions = session.getPermissions();
+			perms = grantedPermissions.toArray(new String[grantedPermissions.size()]);
+			onFacebookStateChanged( 4, perms );
 		break;
 		}
 	}
 
 	// Send back to the private slot on QFacebook class
-	private static native void onFacebookStateChanged( int newstate );
+	private static native void onFacebookStateChanged( int newstate, String[] grantedPermissions );
 
 }

@@ -21,8 +21,16 @@
 #include <QStringList>
 #include <QtGui/QGuiApplication>
 #include <QtQml>
+#include <QUrl>
+#include <QPixmap>
 
 class QFacebookPlatformData;
+
+#ifdef QFACEBOOK_NOT_DEFINE_JNI_ONLOAD
+typedef struct _JavaVM JavaVM;
+/*! this function register native method to the Java binding class */
+int qFacebook_registerJavaNativeMethods(JavaVM*, void*);
+#endif
 
 /*! QFacebook object allow to access a various functionality of Facebook SDK
  *  in a simpler way and on different platform with the same interface.
@@ -83,6 +91,11 @@ public slots:
 	void login();
 	/*! close the Facebook session and clear any cached information */
 	void close();
+	/*! post a photo to the user wall
+	 *  \param photo the image will be uploaded to the user album on Facebook
+	 *  \param message an optional description of the photo that will be shown in the feed story
+	 */
+	void publishPhoto( QPixmap photo, QString message=QString() );
 	/*! return the application ID */
 	QString getAppID();
 	/*! configure the application ID (it is a global settings for all future sessions) */
@@ -115,7 +128,7 @@ private slots:
 	//! handle the return to the active state for supporting app-switch login
 	void onApplicationStateChanged(Qt::ApplicationState state);
 	//! handle the changing of the underlying Facebook session state
-	void onFacebookStateChanged( int newstate );
+	void onFacebookStateChanged( int newstate, QStringList grantedPermissions );
 private:
 	/*! singleton object */
 	QFacebook( QObject* parent=0 );

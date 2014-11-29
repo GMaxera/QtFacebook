@@ -21,6 +21,7 @@
 #import "FacebookSDK/FacebookSDK.h"
 #import "UIKit/UIKit.h"
 #include <QString>
+#include <QPixmap>
 
 /*! Override the application:openURL UIApplicationDelegate adding
  *  a category to the QIOApplicationDelegate.
@@ -45,33 +46,38 @@
 class QFacebookPlatformData {
 public:
 	QFacebook* qFacebook;
-	void sessionStateHandler(FBSession*, FBSessionState fstate, NSError* error) {
+	void sessionStateHandler(FBSession* session, FBSessionState fstate, NSError* error) {
 		if (error) {
 			NSLog(@"error:%@",error);
 		}
+		QStringList grantedList;
 		switch( fstate ) {
 		case FBSessionStateCreated:
-			qFacebook->onFacebookStateChanged( QFacebook::SessionCreated );
+			qFacebook->onFacebookStateChanged( QFacebook::SessionCreated, QStringList() );
 			break;
 		case FBSessionStateCreatedTokenLoaded:
-			qFacebook->onFacebookStateChanged( QFacebook::SessionCreatedTokenLoaded );
+			qFacebook->onFacebookStateChanged( QFacebook::SessionCreatedTokenLoaded, QStringList() );
 			break;
 		case FBSessionStateCreatedOpening:
-			qFacebook->onFacebookStateChanged( QFacebook::SessionCreatedTokenLoaded );
-			qFacebook->state = QFacebook::SessionOpening;
-			qFacebook->connected = false;
+			qFacebook->onFacebookStateChanged( QFacebook::SessionCreatedTokenLoaded, QStringList() );
 			break;
 		case FBSessionStateOpen:
-			qFacebook->onFacebookStateChanged( QFacebook::SessionOpen );
+			for( NSString* perm in [session permissions] ) {
+				grantedList.append( QString::fromNSString(perm) );
+			}
+			qFacebook->onFacebookStateChanged( QFacebook::SessionOpen, grantedList );
 			break;
 		case FBSessionStateOpenTokenExtended:
-			qFacebook->onFacebookStateChanged( QFacebook::SessionOpenTokenExtended );
+			for( NSString* perm in [session permissions] ) {
+				grantedList.append( QString::fromNSString(perm) );
+			}
+			qFacebook->onFacebookStateChanged( QFacebook::SessionOpenTokenExtended, grantedList );
 			break;
 		case FBSessionStateClosedLoginFailed:
-			qFacebook->onFacebookStateChanged( QFacebook::SessionClosedLoginFailed );
+			qFacebook->onFacebookStateChanged( QFacebook::SessionClosedLoginFailed, QStringList() );
 			break;
 		case FBSessionStateClosed:
-			qFacebook->onFacebookStateChanged( QFacebook::SessionClosed );
+			qFacebook->onFacebookStateChanged( QFacebook::SessionClosed, QStringList() );
 			break;
 		}
 	}
@@ -108,6 +114,10 @@ void QFacebook::login() {
 
 void QFacebook::close() {
 	[[FBSession activeSession] closeAndClearTokenInformation];
+}
+
+void QFacebook::publishPhoto( QPixmap photo, QString message ) {
+	qDebug() << "Publish Photo" << photo.size() << message;
 }
 
 void QFacebook::setAppID( QString appID ) {

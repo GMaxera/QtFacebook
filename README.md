@@ -122,6 +122,22 @@ SOURCES += \
 	/path/to/QtFacebook/qfacebook_android.cpp
 ```
 
+## Warnings and Know issues
+### Multiple definition of JNI_OnLoad
+In order to register native methods for the Java binding, the source code define and implement the JNI_OnLoad for doing the registration of native methods. If the source code is included into a project that already defines the JNI_OnLoad for some other custom java binding, then this error arise.
+To solve it, define into the .pro the following define:
+```
+DEFINES += QFACEBOOK_NOT_DEFINE_JNI_ONLOAD
+```
+And in your custom JNI_OnLoad call the following function:
+```
+#include "qfacebook.h"
+jint JNICALL JNI_OnLoad(JavaVM *vm, void* ptr) {
+	...
+	qFacebook_registerJavaNativeMethods( vm, ptr );
+	...
+}
+```
 
 How to use in Qt Quick
 ==========

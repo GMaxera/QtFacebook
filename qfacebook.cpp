@@ -32,6 +32,7 @@ QFacebook* QFacebook::instance() {
 
 QFacebook::QFacebook(QObject *parent )
 	: QObject(parent) {
+	qDebug() << "Creating QFacebook singleton Instance";
 	initPlatformData();
 	connect( qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
 			 this, SLOT(onApplicationStateChanged(Qt::ApplicationState)) );
@@ -61,11 +62,13 @@ QFacebook::FacebookState QFacebook::getState() {
 	return state;
 }
 
-void QFacebook::onFacebookStateChanged( int newstate ) {
+void QFacebook::onFacebookStateChanged(int newstate , QStringList grantedPermissions) {
 	state = (FacebookState)newstate;
 	connected = ( state == SessionOpen || state == SessionOpenTokenExtended );
+	this->grantedPermissions = grantedPermissions;
 	emit stateChanged( state );
 	emit connectedChanged( connected );
+	emit grantedPermissionsChanged( this->grantedPermissions );
 }
 
 bool QFacebook::isReadPermission( QString permission ) {
@@ -74,7 +77,8 @@ bool QFacebook::isReadPermission( QString permission ) {
 	static QStringList knowRead = QStringList()
 		<< "public_profile"
 		<< "user_friends"
-		<< "email";
+		<< "email"
+		<< "user_photos";
 	return knowRead.contains( permission );
 }
 

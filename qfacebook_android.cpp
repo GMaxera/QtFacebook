@@ -25,20 +25,36 @@
 class QFacebookPlatformData {
 public:
 	QString jClassName;
-	void registerNativeMethods();
+	// this avoid to create the QFacebook from native method
+	// when the Qt Application is not loaded yet
+	static bool initialized;
+	// init state and permission got from Facebook SDK before
+	// the Qt Application loading
+	static int stateAtStart;
+	static QStringList grantedPermissionAtStart;
 };
+
+bool QFacebookPlatformData::initialized = false;
+int QFacebookPlatformData::stateAtStart = -1;
+QStringList QFacebookPlatformData::grantedPermissionAtStart = QStringList();
 
 void QFacebook::initPlatformData() {
 	displayName = "Not used on Android";
 	data = new QFacebookPlatformData();
 	data->jClassName = "org/gmaxera/qtfacebook/QFacebookBinding";
-	data->registerNativeMethods();
 	// Get the default application ID
 	QAndroidJniObject defAppId = QAndroidJniObject::callStaticObjectMethod<jstring>(
 				"com.facebook.Settings",
 				"getApplicationId" );
 	appID = defAppId.toString();
+	data->initialized = true;
 	qDebug() << "QFacebook Initialization:" << appID;
+	if ( QFacebookPlatformData::stateAtStart != -1 ) {
+		qDebug() << "Sync with state and permission loaded at start";
+		onFacebookStateChanged( QFacebookPlatformData::stateAtStart,
+								QFacebookPlatformData::grantedPermissionAtStart );
+		qDebug() << state << grantedPermissions;
+	}
 }
 
 void QFacebook::login() {
@@ -47,6 +63,12 @@ void QFacebook::login() {
 }
 
 void QFacebook::close() {
+	// call the java implementation
+	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(), "close" );
+}
+
+void QFacebook::publishPhoto( QPixmap photo, QString message ) {
+
 }
 
 void QFacebook::setAppID( QString appID ) {
@@ -102,25 +124,62 @@ void QFacebook::onApplicationStateChanged(Qt::ApplicationState state) {
 	// NOT USED
 }
 
-static void fromJavaOnFacebookStateChanged(JNIEnv *env, jobject thiz, jint newstate) {
+static void fromJavaOnFacebookStateChanged(JNIEnv *env, jobject thiz, jint newstate, jobjectArray grantedPermissions ) {
 	Q_UNUSED(env)
 	Q_UNUSED(thiz)
 	int state = newstate;
-	QMetaObject::invokeMethod(QFacebook::instance(), "onFacebookStateChanged",
+	QStringList permissions;
+	int count = env->GetArrayLength(grantedPermissions);
+	for( int i=0; i<count; i++ ) {
+		QAndroidJniObject perm( env->GetObjectArrayElement(grantedPermissions, i) );
+		permissions.append( perm.toString() );
+	}
+	if ( QFacebookPlatformData::initialized ) {
+		qDebug() << "Calling Java Native";
+		QMetaObject::invokeMethod(QFacebook::instance(), "onFacebookStateChanged",
 							  Qt::QueuedConnection,
-							  Q_ARG(int, state));
+							  Q_ARG(int, state),
+							  Q_ARG(QStringList, permissions));
+	} else {
+		qDebug() << "Delay calling of slot onFacebookStateChanged";
+		QFacebookPlatformData::stateAtStart = state;
+		QFacebookPlatformData::grantedPermissionAtStart = permissions;
+	}
 }
 
-void QFacebookPlatformData::registerNativeMethods() {
+
+static JNINativeMethod methods[] {
+	{"onFacebookStateChanged", "(I[Ljava/lang/String;)V", (void*)(fromJavaOnFacebookStateChanged)}
+};
+
+#ifdef QFACEBOOK_NOT_DEFINE_JNI_ONLOAD
+int qFacebook_registerJavaNativeMethods(JavaVM* vm, void*) {
+#else
+jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
+#endif
+	JNIEnv *env;
+	if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_4) != JNI_OK) {
+		return JNI_FALSE;
+	}
+	jclass clazz = env->FindClass("org/gmaxera/qtfacebook/QFacebookBinding");
+	if (env->RegisterNatives(clazz, methods, sizeof(methods) / sizeof(methods[0])) < 0) {
+		return JNI_FALSE;
+	}
+	return JNI_VERSION_1_4;
+}
+
+/*
+void QFacebook::registerJavaNativeMethods() {
+	qDebug() << "REGISTERING NATIVE METHODS";
 	JNINativeMethod methods[] {
-		{"onFacebookStateChanged", "(I)V", reinterpret_cast<void *>(fromJavaOnFacebookStateChanged)}
+		{"onFacebookStateChanged", "(I[Ljava/lang/String;)V", reinterpret_cast<void *>(fromJavaOnFacebookStateChanged)}
 	};
 
-	QAndroidJniObject javaClass(jClassName.toLatin1().data());
+	QAndroidJniObject javaClass("org/gmaxera/qtfacebook/QFacebookBinding");
 	QAndroidJniEnvironment env;
 	jclass objectClass = env->GetObjectClass(javaClass.object<jobject>());
 	env->RegisterNatives(objectClass,
 						 methods,
 						 sizeof(methods) / sizeof(methods[0]));
 	env->DeleteLocalRef(objectClass);
-}
+}*/
