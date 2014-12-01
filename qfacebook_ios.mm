@@ -22,6 +22,8 @@
 #import "UIKit/UIKit.h"
 #include <QString>
 #include <QPixmap>
+#include <QByteArray>
+#include <QBuffer>
 
 /*! Override the application:openURL UIApplicationDelegate adding
  *  a category to the QIOApplicationDelegate.
@@ -116,8 +118,39 @@ void QFacebook::close() {
 	[[FBSession activeSession] closeAndClearTokenInformation];
 }
 
+void QFacebook::requestPublishPermissions() {
+	[[FBSession activeSession] requestNewPublishPermissions:(data->writePermissions)
+		defaultAudience:FBSessionDefaultAudienceFriends
+		completionHandler:^( FBSession *session, NSError *error) {
+		if (error) {
+			emit operationError( "publishPhoto", QString::fromNSString([error localizedDescription]) );
+		}
+	}];
+}
+
 void QFacebook::publishPhoto( QPixmap photo, QString message ) {
 	qDebug() << "Publish Photo" << photo.size() << message;
+
+	QByteArray imgData;
+	QBuffer buffer(&imgData);
+	buffer.open(QIODevice::WriteOnly);
+	photo.save(&buffer, "PNG");
+	UIImage* img = [[UIImage imageWithData:(imgData.toNSData())] autorelease];
+
+	NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
+	[params setObject:img forKey:@"source"];
+	if ( !message.isEmpty() ) {
+		[params setObject:message.toNSString() forKey:@"message"];
+	}
+	[FBRequestConnection
+		startWithGraphPath:@"me/photos"
+		parameters:params
+		HTTPMethod:@"POST"
+		completionHandler:^(FBRequestConnection* connection, id result, NSError *error) {
+		if (error) {
+			emit operationError( "publishPhoto", QString::fromNSString([error localizedDescription]) );
+		}
+	}];
 }
 
 void QFacebook::setAppID( QString appID ) {

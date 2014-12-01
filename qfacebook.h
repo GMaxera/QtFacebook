@@ -87,10 +87,19 @@ public:
 		SessionClosed = 6
 	};
 public slots:
-	/*! perform a login into facebook */
+	/*! perform a login into facebook
+	 *  During the login to Facebook only the read permissions (which that doesn't allow
+	 *  to publish) listed into requestPermissions property are requested to the user.
+	 *  To obtain the permissions for publish, you have to call the requestPublishPermissions after
+	 *  the login.
+	 */
 	void login();
 	/*! close the Facebook session and clear any cached information */
 	void close();
+	/*! request write permissions for publish on Facebook
+	 *  Call this method only after a successfull login to Facebook
+	 */
+	void requestPublishPermissions();
 	/*! post a photo to the user wall
 	 *  \param photo the image will be uploaded to the user album on Facebook
 	 *  \param message an optional description of the photo that will be shown in the feed story
@@ -124,6 +133,12 @@ signals:
 	void stateChanged( FacebookState state );
 	void requestPermissionsChanged( QStringList requestPermissions );
 	void grantedPermissionsChanged( QStringList grantedPermissions );
+	/*! emitted when an error occur during a Facebook operation
+	 *  \param operation the name of the method called (i.e. publishPhoto)
+	 *  \param error the error returned by Facebook
+	 *  \note A failed login is not an error
+	 */
+	void operationError( QString operation, QString error );
 private slots:
 	//! handle the return to the active state for supporting app-switch login
 	void onApplicationStateChanged(Qt::ApplicationState state);
