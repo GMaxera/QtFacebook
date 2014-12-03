@@ -8,6 +8,8 @@ import android.util.Log;
 import android.content.Intent;
 import java.util.ArrayList;
 import java.util.List;
+import android.graphics.BitmapFactory;
+import android.graphics.Bitmap;
 
 /*! Java class for bind the C++ method of QFacebook to the
  *  java implementation using the native Facebook SDK for Android
@@ -15,7 +17,7 @@ import java.util.List;
  *  This class is a singleton because it's a binding of a singleton C++ object
  *  All the methods are static, and they use the private singleton instance
  */
-public class QFacebookBinding implements Session.StatusCallback {
+public class QFacebookBinding implements Session.StatusCallback, Request.Callback {
 	// Singleton instance created as soon as possibile
 	private static final QFacebookBinding m_instance = new QFacebookBinding();
 	// Activity of which this QFacebookBinding is associated
@@ -73,20 +75,51 @@ public class QFacebookBinding implements Session.StatusCallback {
 		m_instance.uiLifecycleHelper.onActivityResult(requestCode, resultCode, data);
 	}
 
-	// Perform the login into Facebook
-	static public void login() {
-		Session.OpenRequest request = new Session.OpenRequest(m_instance.activity);
-		request.setPermissions( m_instance.readPermissions );
+	// Check the activeSession and create is if needed
+	static public void createSessionIfNeeded() {
 		if (Session.getActiveSession() == null || Session.getActiveSession().isClosed()) {
 			Session session = new Session.Builder( m_instance.activity.getApplicationContext() ).build();
 			Session.setActiveSession(session);
 		}
+	}
+
+	// Perform the login into Facebook
+	static public void login() {
+		Session.OpenRequest request = new Session.OpenRequest(m_instance.activity);
+		request.setPermissions( m_instance.readPermissions );
+		createSessionIfNeeded();
 		Session.getActiveSession().openForRead( request );
 	}
 
 	// Perform the logout and clear any token information
 	static public void close() {
+		createSessionIfNeeded();
 		Session.getActiveSession().closeAndClearTokenInformation();
+	}
+
+	// Request the write permissions
+	static public void requestPublishPermissions() {
+		Session.NewPermissionsRequest request = new Session.NewPermissionsRequest(m_instance.activity, m_instance.writePermissions);
+		createSessionIfNeeded();
+		Session.getActiveSession().requestNewPublishPermissions( request );
+	}
+
+	// Publish a photo
+	static public void publishPhoto( byte[] imgBytes, String message ) {
+		Log.i("QFacebook", "Facebook start Publishing Photo");
+		/*
+		Bitmap photo = BitmapFactory.decodeByteArray( imgBytes, 0, imgBytes.length );
+		Bundle params = new Bundle();
+		params.putParcelable( "source", photo );
+		if ( !message.isEmpty() ) {
+			params.putString( "message", message );
+		}
+		createSessionIfNeeded();
+		Request request = new Request( Session.getActiveSession(), "me/photos", params, HttpMethod.POST );
+		request.setCallback( m_instance );
+		request.executeAsync().execute();
+		Log.i("QFacebook", "Facebook start Publishing Photo");
+		*/
 	}
 
 	// The Session.StatusCallback method
@@ -137,6 +170,18 @@ public class QFacebookBinding implements Session.StatusCallback {
 			perms = grantedPermissions.toArray(new String[grantedPermissions.size()]);
 			onFacebookStateChanged( 4, perms );
 		break;
+		}
+	}
+
+	// The Request.Callback method
+	@Override
+	public void onCompleted(Response response) {
+		GraphObject graphObject = response.getGraphObject();
+		// check if success
+		if ( graphObject.getProperty(Response.SUCCESS_KEY) == (Boolean)true ) {
+			Log.i("QFacebook", "Facebook Request SUCCESS");
+		} else {
+			Log.i("QFacebook", "Facebook Request ERROR");
 		}
 	}
 

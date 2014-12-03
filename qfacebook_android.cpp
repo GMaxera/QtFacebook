@@ -21,6 +21,8 @@
 #include <QString>
 #include <QtAndroidExtras>
 #include <QDebug>
+#include <QByteArray>
+#include <QBuffer>
 
 class QFacebookPlatformData {
 public:
@@ -67,8 +69,28 @@ void QFacebook::close() {
 	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(), "close" );
 }
 
-void QFacebook::publishPhoto( QPixmap photo, QString message ) {
+void QFacebook::requestPublishPermissions() {
+	// call the java implementation
+	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(), "requestPublishPermissions" );
+}
 
+void QFacebook::publishPhoto( QPixmap photo, QString message ) {
+	qDebug() << "Publish Photo" << photo.size() << message;
+
+	QByteArray imgData;
+	QBuffer buffer(&imgData);
+	buffer.open(QIODevice::WriteOnly);
+	photo.save(&buffer, "PNG");
+	// create the java byte array
+	QAndroidJniEnvironment env;
+	jbyteArray imgBytes = env->NewByteArray( imgData.size() );
+	env->SetByteArrayRegion( imgBytes, 0, imgData.size(), (jbyte*)imgData.constData() );
+	// call the java implementation
+	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(),
+											   "publishPhoto",
+											   "([BLjava/lang/String;)V",
+											   imgBytes,
+											   QAndroidJniObject::fromString(message).object<jstring>() );
 }
 
 void QFacebook::setAppID( QString appID ) {
