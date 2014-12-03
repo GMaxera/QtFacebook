@@ -133,6 +133,12 @@ signals:
 	void stateChanged( FacebookState state );
 	void requestPermissionsChanged( QStringList requestPermissions );
 	void grantedPermissionsChanged( QStringList grantedPermissions );
+	/*! emitted when an operation is completed
+	 *  \param operation the name of the method called (i.e. publishPhoto)
+	 *  \note login and close does not emit this signal; use connected and state properties
+	 *  to monitor login and close operations
+	 */
+	void operationDone( QString operation );
 	/*! emitted when an error occur during a Facebook operation
 	 *  \param operation the name of the method called (i.e. publishPhoto)
 	 *  \param error the error returned by Facebook
@@ -147,6 +153,7 @@ private slots:
 private:
 	/*! singleton object */
 	QFacebook( QObject* parent=0 );
+	~QFacebook();
 	Q_DISABLE_COPY(QFacebook)
 
 	/*! check if a requested permission is read-only or write

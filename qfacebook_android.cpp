@@ -169,9 +169,20 @@ static void fromJavaOnFacebookStateChanged(JNIEnv *env, jobject thiz, jint newst
 	}
 }
 
+static void fromJavaOnOperationDone(JNIEnv* env, jobject thiz, jstring operation ) {
+	Q_UNUSED(env)
+	Q_UNUSED(thiz)
+	if ( QFacebookPlatformData::initialized ) {
+		QString operationQ = QAndroidJniObject(operation).toString();
+		QMetaObject::invokeMethod(QFacebook::instance(), "operationDone",
+						Qt::QueuedConnection,
+						Q_ARG(QString, operationQ) );
+	}
+}
 
 static JNINativeMethod methods[] {
-	{"onFacebookStateChanged", "(I[Ljava/lang/String;)V", (void*)(fromJavaOnFacebookStateChanged)}
+	{"onFacebookStateChanged", "(I[Ljava/lang/String;)V", (void*)(fromJavaOnFacebookStateChanged)},
+	{"operationDone", "(Ljava/lang/String;)V", (void*)(fromJavaOnOperationDone)}
 };
 
 #ifdef QFACEBOOK_NOT_DEFINE_JNI_ONLOAD
@@ -189,19 +200,3 @@ jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
 	}
 	return JNI_VERSION_1_4;
 }
-
-/*
-void QFacebook::registerJavaNativeMethods() {
-	qDebug() << "REGISTERING NATIVE METHODS";
-	JNINativeMethod methods[] {
-		{"onFacebookStateChanged", "(I[Ljava/lang/String;)V", reinterpret_cast<void *>(fromJavaOnFacebookStateChanged)}
-	};
-
-	QAndroidJniObject javaClass("org/gmaxera/qtfacebook/QFacebookBinding");
-	QAndroidJniEnvironment env;
-	jclass objectClass = env->GetObjectClass(javaClass.object<jobject>());
-	env->RegisterNatives(objectClass,
-						 methods,
-						 sizeof(methods) / sizeof(methods[0]));
-	env->DeleteLocalRef(objectClass);
-}*/

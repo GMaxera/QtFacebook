@@ -149,6 +149,8 @@ void QFacebook::publishPhoto( QPixmap photo, QString message ) {
 		completionHandler:^(FBRequestConnection* connection, id result, NSError *error) {
 		if (error) {
 			emit operationError( "publishPhoto", QString::fromNSString([error localizedDescription]) );
+		} else {
+			emit operationDone( "publishPhoto" );
 		}
 	}];
 }

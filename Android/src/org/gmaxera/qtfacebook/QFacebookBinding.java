@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
+import java.lang.Thread;
 
 /*! Java class for bind the C++ method of QFacebook to the
  *  java implementation using the native Facebook SDK for Android
@@ -17,7 +18,7 @@ import android.graphics.Bitmap;
  *  This class is a singleton because it's a binding of a singleton C++ object
  *  All the methods are static, and they use the private singleton instance
  */
-public class QFacebookBinding implements Session.StatusCallback, Request.Callback {
+public class QFacebookBinding implements Session.StatusCallback {
 	// Singleton instance created as soon as possibile
 	private static final QFacebookBinding m_instance = new QFacebookBinding();
 	// Activity of which this QFacebookBinding is associated
@@ -78,8 +79,11 @@ public class QFacebookBinding implements Session.StatusCallback, Request.Callbac
 	// Check the activeSession and create is if needed
 	static public void createSessionIfNeeded() {
 		if (Session.getActiveSession() == null || Session.getActiveSession().isClosed()) {
+			Log.i("QFacebook", "Facebook Creating a new Session");
 			Session session = new Session.Builder( m_instance.activity.getApplicationContext() ).build();
 			Session.setActiveSession(session);
+		} else {
+			Log.i("QFacebook", "Facebook Session still valid "+Session.getActiveSession().getState());
 		}
 	}
 
@@ -89,6 +93,7 @@ public class QFacebookBinding implements Session.StatusCallback, Request.Callbac
 		request.setPermissions( m_instance.readPermissions );
 		createSessionIfNeeded();
 		Session.getActiveSession().openForRead( request );
+		Log.i("QFacebook", "Requesting Login to Facebook");
 	}
 
 	// Perform the logout and clear any token information
@@ -107,19 +112,43 @@ public class QFacebookBinding implements Session.StatusCallback, Request.Callbac
 	// Publish a photo
 	static public void publishPhoto( byte[] imgBytes, String message ) {
 		Log.i("QFacebook", "Facebook start Publishing Photo");
-		/*
 		Bitmap photo = BitmapFactory.decodeByteArray( imgBytes, 0, imgBytes.length );
-		Bundle params = new Bundle();
-		params.putParcelable( "source", photo );
+		createSessionIfNeeded();
+		final Request request = Request.newUploadPhotoRequest(
+			Session.getActiveSession(),
+			photo,
+			new Request.Callback() {
+				// The Request.Callback method
+				@Override
+				public void onCompleted(Response response) {
+					Log.i("QFacebook", "Publish Photo Request Completed");
+					operationDone( "publishPhoto" );
+					GraphObject graphObject = response.getGraphObject();
+					FacebookRequestError error = response.getError();
+					if ( graphObject != null ) {
+						Log.i("QFacebook", "Graph Object exists: "+graphObject.getProperty(Response.SUCCESS_KEY));
+					}
+					if ( error != null ) {
+						Log.i("QFacebook", "Response terminated with an Error");
+					}
+				}
+			}
+		);
 		if ( !message.isEmpty() ) {
+			Bundle params = request.getParameters();
 			params.putString( "message", message );
 		}
-		createSessionIfNeeded();
-		Request request = new Request( Session.getActiveSession(), "me/photos", params, HttpMethod.POST );
-		request.setCallback( m_instance );
-		request.executeAsync().execute();
-		Log.i("QFacebook", "Facebook start Publishing Photo");
-		*/
+		//RequestAsyncTask task = new RequestAsyncTask(request);
+		//task.execute();
+		//Request.executeBatchAsync(request);
+		//Request.executeAndWait(request);
+		Thread thread = new Thread() {
+			@Override
+			public void run() {
+				Request.executeAndWait(request);
+			}
+		};
+		thread.start();
 	}
 
 	// The Session.StatusCallback method
@@ -173,19 +202,8 @@ public class QFacebookBinding implements Session.StatusCallback, Request.Callbac
 		}
 	}
 
-	// The Request.Callback method
-	@Override
-	public void onCompleted(Response response) {
-		GraphObject graphObject = response.getGraphObject();
-		// check if success
-		if ( graphObject.getProperty(Response.SUCCESS_KEY) == (Boolean)true ) {
-			Log.i("QFacebook", "Facebook Request SUCCESS");
-		} else {
-			Log.i("QFacebook", "Facebook Request ERROR");
-		}
-	}
-
 	// Send back to the private slot on QFacebook class
 	private static native void onFacebookStateChanged( int newstate, String[] grantedPermissions );
-
+	// Emit signal for operation done
+	private static native void operationDone( String operation );
 }
