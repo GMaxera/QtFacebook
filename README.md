@@ -144,17 +144,17 @@ jint JNICALL JNI_OnLoad(JavaVM *vm, void* ptr) {
 How to use for Desktop
 ==========
 
-QtFacebook does not really provide integration for desktop applications. It does provide, however a dummy implementation of Facebook requests. This is useful because it permits to run your application on a desktop (e.g. to test other features) and to some very basic tests on facebook integration (e.g. to test if your code reacts correctly to a successful facebook login). To integrate the desktop version of QtFacebook you only need to do change your Qt project file (and follow the instructions in "How to use in Qt Quick"):
-
+QtFacebook does not really provide integration for desktop applications. It does provide, however a dummy implementation of Facebook requests. This is useful because it permits to run your application on a desktop (e.g. to test other features) and to perform some very basic tests on facebook integration (e.g. to test if your code reacts correctly to a successful facebook login). To integrate the desktop version of QtFacebook you only need to do change your Qt project file (and follow the instructions in "How to use in Qt Quick"):
+```
 INCLUDEPATH += /path/to/QtFacebook
 HEADERS += \
 	/path/to/QtFacebook/qfacebook.h
 SOURCES += \
 	/path/to/QtFacebook/qfacebook.cpp \
 	/path/to/QtFacebook/qfacebook_desktop.cpp
-
+```
 If you use the same project file for both desktop and e.g. android you can do the following:
-
+```
 INCLUDEPATH += /path/to/QtFacebook
 HEADERS += \
 	/path/to/QtFacebook/qfacebook.h
@@ -163,7 +163,7 @@ SOURCES += \
 
 android: SOURCES += /path/to/QtFacebook/qfacebook_android.cpp
 else: SOURCES += /path/to/QtFacebook/qfacebook_desktop.cpp
-
+```
 How to use in Qt Quick
 ==========
 
