@@ -61,7 +61,7 @@ android update project --path . --target android-19
 ```
 ANDROID_PACKAGE_SOURCE_DIR = $$PWD/Android
 ```
-* In the Android package source directory add the project.properties file (or edit it) and append the following content (pay attention to android.library.reference.1, if you already added other library references you should ensure that the number is unique and progressive):
+* In the Android package source directory add the project.properties file (or edit it) and append the following content (pay attention to android.library.reference.1, if you already added other library references you should ensure that the number is unique and progressive; moreover the path should be the relative path from your project android build directory to the directory with facebook sdk):
 ```
 # Project target.
 target=android-19
@@ -87,6 +87,8 @@ android.library.reference.1=../../facebook
 ```
 import org.qtproject.qt5.android.bindings.QtActivity;
 import org.gmaxera.qtfacebook.QFacebookBinding;
+import android.content.Intent;
+import android.os.Bundle;
 
 public class MyCustomAppActivity extends QtActivity {
 	@Override
@@ -113,13 +115,13 @@ public class MyCustomAppActivity extends QtActivity {
 ```
 * In your Qt project add the following option:
 ```
-QT += androidextras
+android: QT += androidextras
 INCLUDEPATH += /path/to/QtFacebook
 HEADERS += \
 	/path/to/QtFacebook/qfacebook.h
 SOURCES += \
-	/path/to/QtFacebook/qfacebook.cpp \
-	/path/to/QtFacebook/qfacebook_android.cpp
+	/path/to/QtFacebook/qfacebook.cpp
+android: SOURCES += /path/to/QtFacebook/qfacebook_android.cpp
 ```
 
 ## Warnings and Know issues
@@ -139,6 +141,29 @@ jint JNICALL JNI_OnLoad(JavaVM *vm, void* ptr) {
 }
 ```
 
+How to use for Desktop
+==========
+
+QtFacebook does not really provide integration for desktop applications. It does provide, however a dummy implementation of Facebook requests. This is useful because it permits to run your application on a desktop (e.g. to test other features) and to perform some very basic tests on facebook integration (e.g. to test if your code reacts correctly to a successful facebook login). To integrate the desktop version of QtFacebook you only need to do change your Qt project file (and follow the instructions in "How to use in Qt Quick"):
+```
+INCLUDEPATH += /path/to/QtFacebook
+HEADERS += \
+	/path/to/QtFacebook/qfacebook.h
+SOURCES += \
+	/path/to/QtFacebook/qfacebook.cpp \
+	/path/to/QtFacebook/qfacebook_desktop.cpp
+```
+If you use the same project file for both desktop and e.g. android you can do the following:
+```
+INCLUDEPATH += /path/to/QtFacebook
+HEADERS += \
+	/path/to/QtFacebook/qfacebook.h
+SOURCES += \
+	/path/to/QtFacebook/qfacebook.cpp
+
+android: SOURCES += /path/to/QtFacebook/qfacebook_android.cpp
+else: SOURCES += /path/to/QtFacebook/qfacebook_desktop.cpp
+```
 How to use in Qt Quick
 ==========
 
