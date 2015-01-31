@@ -20,9 +20,9 @@
 #include "qfacebook.h"
 #include <QString>
 #include <QtAndroidExtras>
-#include <QDebug>
 #include <QByteArray>
 #include <QBuffer>
+#include <QDebug>
 
 class QFacebookPlatformData {
 public:
@@ -50,12 +50,12 @@ void QFacebook::initPlatformData() {
 				"getApplicationId" );
 	appID = defAppId.toString();
 	data->initialized = true;
-	qDebug() << "QFacebook Initialization:" << appID;
+	//qDebug() << "QFacebook Initialization:" << appID;
 	if ( QFacebookPlatformData::stateAtStart != -1 ) {
-		qDebug() << "Sync with state and permission loaded at start";
+		//qDebug() << "Sync with state and permission loaded at start";
 		onFacebookStateChanged( QFacebookPlatformData::stateAtStart,
 								QFacebookPlatformData::grantedPermissionAtStart );
-		qDebug() << state << grantedPermissions;
+		//qDebug() << state << grantedPermissions;
 	}
 }
 
@@ -75,7 +75,7 @@ void QFacebook::requestPublishPermissions() {
 }
 
 void QFacebook::publishPhoto( QPixmap photo, QString message ) {
-	qDebug() << "Publish Photo" << photo.size() << message;
+	//qDebug() << "Publish Photo" << photo.size() << message;
 
 	QByteArray imgData;
 	QBuffer buffer(&imgData);
@@ -157,13 +157,13 @@ static void fromJavaOnFacebookStateChanged(JNIEnv *env, jobject thiz, jint newst
 		permissions.append( perm.toString() );
 	}
 	if ( QFacebookPlatformData::initialized ) {
-		qDebug() << "Calling Java Native";
+		//qDebug() << "Calling Java Native";
 		QMetaObject::invokeMethod(QFacebook::instance(), "onFacebookStateChanged",
 							  Qt::QueuedConnection,
 							  Q_ARG(int, state),
 							  Q_ARG(QStringList, permissions));
 	} else {
-		qDebug() << "Delay calling of slot onFacebookStateChanged";
+		//qDebug() << "Delay calling of slot onFacebookStateChanged";
 		QFacebookPlatformData::stateAtStart = state;
 		QFacebookPlatformData::grantedPermissionAtStart = permissions;
 	}
