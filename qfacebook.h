@@ -105,6 +105,17 @@ public slots:
 	 *  \param message an optional description of the photo that will be shown in the feed story
 	 */
 	void publishPhoto( QPixmap photo, QString message=QString() );
+	/*! Publish a link with a photo using Share Dialog.
+	 *
+	 *  If the Share Dialog is not available (e.g. because the user hasn't the Facebook app installed),
+	 *  falls back to using the Feed Dialog. This function does not require the user to be logged into
+	 *  Facebook from the app
+	 *  \param linkName the name of the link
+	 *  \param link the link url
+	 *  \param imageUrl is the url of the image associated wih the link
+	 */
+	void publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl );
+
 	/*! return the application ID */
 	QString getAppID();
 	/*! configure the application ID (it is a global settings for all future sessions) */

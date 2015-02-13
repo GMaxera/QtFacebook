@@ -57,23 +57,26 @@ void QFacebook::initPlatformData() {
 
 void QFacebook::login() {
 	// Directly calling slot
-	onFacebookStateChanged(3, QStringList());
+	onFacebookStateChanged(SessionOpen, QStringList());
 }
 
 void QFacebook::close() {
 	// Directly calling slot
-	onFacebookStateChanged(6, QStringList());
+	onFacebookStateChanged(SessionClosed, QStringList());
 }
 
 void QFacebook::requestPublishPermissions() {
 	// Directly calling slot
-	onFacebookStateChanged(4, QStringList());
+	onFacebookStateChanged(SessionOpenTokenExtended, QStringList());
 }
 
 void QFacebook::publishPhoto( QPixmap photo, QString message ) {
-	Q_UNUSED(photo)
 	Q_UNUSED(message)
 	qDebug() << "Publish Photo" << photo.size() << message;
+}
+
+void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl ) {
+	qDebug() << "Publish link" << link << linkName << imageUrl;
 }
 
 void QFacebook::setAppID( QString appID ) {
