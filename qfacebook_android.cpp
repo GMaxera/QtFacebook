@@ -236,16 +236,6 @@ static void fromJavaOnFacebookStateChanged(JNIEnv *env, jobject thiz, jint newst
 		qDebug() << "Calling Java Native";
 		QMetaObject::invokeMethod(QFacebook::instance(), "onFacebookStateChanged", Qt::QueuedConnection,
 			Q_ARG(int, state), Q_ARG(QStringList, permissions));
-
-		// Checking exceptions
-		QAndroidJniEnvironment env;
-		if (env->ExceptionCheck()) {
-			// Printing exception message
-			env->ExceptionDescribe();
-
-			// Clearing exceptions
-			env->ExceptionClear();
-		}
 	} else {
 		qDebug() << "Delay calling of slot onFacebookStateChanged";
 		QFacebookPlatformData::stateAtStart = state;
@@ -260,16 +250,6 @@ static void fromJavaOnOperationDone(JNIEnv* env, jobject thiz, jstring operation
 		QString operationQ = QAndroidJniObject(operation).toString();
 		QMetaObject::invokeMethod(QFacebook::instance(), "operationDone", Qt::QueuedConnection,
 			Q_ARG(QString, operationQ) );
-
-		// Checking exceptions
-		QAndroidJniEnvironment env;
-		if (env->ExceptionCheck()) {
-			// Printing exception message
-			env->ExceptionDescribe();
-
-			// Clearing exceptions
-			env->ExceptionClear();
-		}
 	}
 }
 
