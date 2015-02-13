@@ -129,7 +129,7 @@ void QFacebook::requestPublishPermissions() {
 }
 
 void QFacebook::publishPhoto( QPixmap photo, QString message ) {
-	qDebug() << "Publish Photo" << photo.size() << message;
+	//qDebug() << "Publish Photo" << photo.size() << message;
 
 	QByteArray imgData;
 	QBuffer buffer(&imgData);

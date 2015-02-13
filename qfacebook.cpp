@@ -32,7 +32,7 @@ QFacebook* QFacebook::instance() {
 
 QFacebook::QFacebook(QObject *parent )
 	: QObject(parent) {
-	qDebug() << "Creating QFacebook singleton Instance";
+	//qDebug() << "Creating QFacebook singleton Instance";
 	connected = false;
 	state = SessionClosed;
 	initPlatformData();
