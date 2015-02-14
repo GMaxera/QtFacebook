@@ -62,16 +62,46 @@ void QFacebook::initPlatformData() {
 void QFacebook::login() {
 	// call the java implementation
 	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(), "login" );
+
+	// Checking exceptions
+	QAndroidJniEnvironment env;
+	if (env->ExceptionCheck()) {
+		// Printing exception message
+		env->ExceptionDescribe();
+
+		// Clearing exceptions
+		env->ExceptionClear();
+	}
 }
 
 void QFacebook::close() {
 	// call the java implementation
 	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(), "close" );
+
+	// Checking exceptions
+	QAndroidJniEnvironment env;
+	if (env->ExceptionCheck()) {
+		// Printing exception message
+		env->ExceptionDescribe();
+
+		// Clearing exceptions
+		env->ExceptionClear();
+	}
 }
 
 void QFacebook::requestPublishPermissions() {
 	// call the java implementation
 	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(), "requestPublishPermissions" );
+
+	// Checking exceptions
+	QAndroidJniEnvironment env;
+	if (env->ExceptionCheck()) {
+		// Printing exception message
+		env->ExceptionDescribe();
+
+		// Clearing exceptions
+		env->ExceptionClear();
+	}
 }
 
 void QFacebook::publishPhoto( QPixmap photo, QString message ) {
@@ -86,14 +116,43 @@ void QFacebook::publishPhoto( QPixmap photo, QString message ) {
 	jbyteArray imgBytes = env->NewByteArray( imgData.size() );
 	env->SetByteArrayRegion( imgBytes, 0, imgData.size(), (jbyte*)imgData.constData() );
 	// call the java implementation
-	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(),
-											   "publishPhoto",
-											   "([BLjava/lang/String;)V",
-											   imgBytes,
-											   QAndroidJniObject::fromString(message).object<jstring>() );
+	QAndroidJniObject::callStaticMethod<void>(
+		data->jClassName.toLatin1().data(), "publishPhoto", "([BLjava/lang/String;)V", imgBytes,
+		QAndroidJniObject::fromString(message).object<jstring>() );
+
+	// Checking exceptions
+	if (env->ExceptionCheck()) {
+		// Printing exception message
+		env->ExceptionDescribe();
+
+		// Clearing exceptions
+		env->ExceptionClear();
+	}
 }
 
-void QFacebook::setAppID( QString appID ) {
+void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl ) {
+	qDebug() << "Publish link" << link << linkName << imageUrl;
+
+	// call the java implementation
+	QAndroidJniObject::callStaticMethod<void>(
+		data->jClassName.toLatin1().data(), "publishLinkViaShareDialog",
+		"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
+		QAndroidJniObject::fromString(linkName).object<jstring>(),
+		QAndroidJniObject::fromString(link).object<jstring>(),
+		QAndroidJniObject::fromString(imageUrl).object<jstring>() );
+
+	// Checking exceptions
+	QAndroidJniEnvironment env;
+	if (env->ExceptionCheck()) {
+		// Printing exception message
+		env->ExceptionDescribe();
+
+		// Clearing exceptions
+		env->ExceptionClear();
+	}
+}
+
+void QFacebook::setAppID( QString ) {
 
 }
 
@@ -108,15 +167,23 @@ void QFacebook::setRequestPermissions( QStringList requestPermissions ) {
 	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(), "writePermissionsClear" );
 	foreach( QString permission, this->requestPermissions ) {
 		if ( isReadPermission(permission) ) {
-			QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(),
-													   "readPermissionsAdd",
-													   "(Ljava/lang/String;)V",
-								QAndroidJniObject::fromString(permission).object<jstring>());
+			QAndroidJniObject::callStaticMethod<void>(
+				data->jClassName.toLatin1().data(), "readPermissionsAdd", "(Ljava/lang/String;)V",
+				QAndroidJniObject::fromString(permission).object<jstring>());
 		} else {
-			QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(),
-													   "writePermissionsAdd",
-													   "(Ljava/lang/String;)V",
-							 QAndroidJniObject::fromString(permission).object<jstring>());
+			QAndroidJniObject::callStaticMethod<void>(
+				data->jClassName.toLatin1().data(), "writePermissionsAdd", "(Ljava/lang/String;)V",
+				QAndroidJniObject::fromString(permission).object<jstring>());
+		}
+
+		// Checking exceptions
+		QAndroidJniEnvironment env;
+		if (env->ExceptionCheck()) {
+			// Printing exception message
+			env->ExceptionDescribe();
+
+			// Clearing exceptions
+			env->ExceptionClear();
 		}
 	}
 	emit requestPermissionsChanged( this->requestPermissions );
@@ -127,17 +194,26 @@ void QFacebook::addRequestPermission( QString requestPermission ) {
 		// add the permission
 		requestPermissions.append( requestPermission );
 		if ( isReadPermission(requestPermission) ) {
-			QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(),
-													   "readPermissionsAdd",
-													   "(Ljava/lang/String;)V",
-								QAndroidJniObject::fromString(requestPermission).object<jstring>());
+			QAndroidJniObject::callStaticMethod<void>(
+				data->jClassName.toLatin1().data(), "readPermissionsAdd", "(Ljava/lang/String;)V",
+				QAndroidJniObject::fromString(requestPermission).object<jstring>());
 		} else {
-			QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(),
-													   "writePermissionsAdd",
-													   "(Ljava/lang/String;)V",
-								QAndroidJniObject::fromString(requestPermission).object<jstring>());
+			QAndroidJniObject::callStaticMethod<void>(
+				data->jClassName.toLatin1().data(), "writePermissionsAdd", "(Ljava/lang/String;)V",
+				QAndroidJniObject::fromString(requestPermission).object<jstring>());
 		}
-		emit requestPermissionsChanged(requestPermissions);
+
+		// Checking exceptions
+		QAndroidJniEnvironment env;
+		if (env->ExceptionCheck()) {
+			// Printing exception message
+			env->ExceptionDescribe();
+
+			// Clearing exceptions
+			env->ExceptionClear();
+		} else {
+			emit requestPermissionsChanged(requestPermissions);
+		}
 	}
 }
 
@@ -158,10 +234,8 @@ static void fromJavaOnFacebookStateChanged(JNIEnv *env, jobject thiz, jint newst
 	}
 	if ( QFacebookPlatformData::initialized ) {
 		//qDebug() << "Calling Java Native";
-		QMetaObject::invokeMethod(QFacebook::instance(), "onFacebookStateChanged",
-							  Qt::QueuedConnection,
-							  Q_ARG(int, state),
-							  Q_ARG(QStringList, permissions));
+		QMetaObject::invokeMethod(QFacebook::instance(), "onFacebookStateChanged", Qt::QueuedConnection,
+			Q_ARG(int, state), Q_ARG(QStringList, permissions));
 	} else {
 		//qDebug() << "Delay calling of slot onFacebookStateChanged";
 		QFacebookPlatformData::stateAtStart = state;
@@ -174,9 +248,8 @@ static void fromJavaOnOperationDone(JNIEnv* env, jobject thiz, jstring operation
 	Q_UNUSED(thiz)
 	if ( QFacebookPlatformData::initialized ) {
 		QString operationQ = QAndroidJniObject(operation).toString();
-		QMetaObject::invokeMethod(QFacebook::instance(), "operationDone",
-						Qt::QueuedConnection,
-						Q_ARG(QString, operationQ) );
+		QMetaObject::invokeMethod(QFacebook::instance(), "operationDone", Qt::QueuedConnection,
+			Q_ARG(QString, operationQ) );
 	}
 }
 
@@ -188,7 +261,8 @@ static JNINativeMethod methods[] {
 #ifdef QFACEBOOK_NOT_DEFINE_JNI_ONLOAD
 int qFacebook_registerJavaNativeMethods(JavaVM* vm, void*) {
 #else
-jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
+extern "C"
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
 #endif
 	JNIEnv *env;
 	if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_4) != JNI_OK) {

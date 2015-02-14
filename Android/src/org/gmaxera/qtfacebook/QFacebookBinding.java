@@ -2,6 +2,7 @@ package org.gmaxera.qtfacebook;
 
 import com.facebook.*;
 import com.facebook.model.*;
+import com.facebook.widget.*;
 import android.os.Bundle;
 import android.app.Activity;
 import android.util.Log;
@@ -66,6 +67,16 @@ public class QFacebookBinding implements Session.StatusCallback {
 		m_instance.uiLifecycleHelper.onResume();
 	}
 
+	//! This has to be called inside the onSaveInstanceState of Activity
+	static public void onSaveInstanceState(Bundle outState) {
+		m_instance.uiLifecycleHelper.onSaveInstanceState(outState);
+	}
+
+	//! This has to be called inside the onPause of Activity
+	static public void onPause() {
+		m_instance.uiLifecycleHelper.onPause();
+	}
+
 	//! This has to be called inside the onDestroy of Activity
 	static public void onDestroy() {
 		m_instance.uiLifecycleHelper.onDestroy();
@@ -73,7 +84,17 @@ public class QFacebookBinding implements Session.StatusCallback {
 
 	//! This has to be called inside the onActivityResult of Activity
 	static public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		m_instance.uiLifecycleHelper.onActivityResult(requestCode, resultCode, data);
+		m_instance.uiLifecycleHelper.onActivityResult(requestCode, resultCode, data, new FacebookDialog.Callback() {
+			@Override
+			public void onError(FacebookDialog.PendingCall pendingCall, Exception error, Bundle data) {
+				Log.e("Activity", String.format("Error: %s", error.toString()));
+			}
+
+			@Override
+			public void onComplete(FacebookDialog.PendingCall pendingCall, Bundle data) {
+				Log.i("Activity", "Success!");
+			}
+		});
 	}
 
 	// Check the activeSession and create is if needed
@@ -151,6 +172,75 @@ public class QFacebookBinding implements Session.StatusCallback {
 		thread.start();
 	}
 
+	// Publish a link with a photo using Share Dialog. If the Share Dialog is not available
+	// (e.g. because the user hasn't the Facebook app installed), falls back to using the
+	// Feed Dialog. This function does not require the user to be logged into Facebook from
+	// the app. linkName is the name of the link, link is the link url, imageUrl is the url
+	// of the image associated wih the link.
+	static public void publishLinkViaShareDialog( final String linkName, final String link, final String imageUrl ) {
+		// Creating the session if it doesn't exist yet
+		createSessionIfNeeded();
+
+		// First of all checking if we can use the ShareDialog and using it if we can
+		if (FacebookDialog.canPresentShareDialog(m_instance.activity.getApplicationContext(), FacebookDialog.ShareDialogFeature.SHARE_DIALOG)) {
+			Log.i("QFacebook", "Publishing using Share Dialog");
+
+			// Publish the post using the Share Dialog. We start the dialog from the UI thread
+			m_instance.activity.runOnUiThread(new Runnable() {
+				public void run() {
+					FacebookDialog shareDialog = new FacebookDialog.ShareDialogBuilder(m_instance.activity)
+						.setLink(link)
+						.setName(linkName)
+						.setPicture(imageUrl)
+						.build();
+					m_instance.uiLifecycleHelper.trackPendingDialogCall(shareDialog.present());
+				}
+			});
+		} else {
+			Log.i("QFacebook", "Publishing using Feed Dialog");
+
+			// Falling back to using the Feed Dialog
+			final Bundle params = new Bundle();
+			params.putString("name", linkName);
+			params.putString("link", link);
+			params.putString("picture", imageUrl);
+
+			// Starting the Feed Dialog from the UI thread
+			m_instance.activity.runOnUiThread(new Runnable() {
+				public void run() {
+					WebDialog.FeedDialogBuilder feedDialogBuilder = new WebDialog.FeedDialogBuilder(m_instance.activity, Session.getActiveSession(), params);
+
+					feedDialogBuilder.setOnCompleteListener(new WebDialog.OnCompleteListener() {
+						@Override
+						public void onComplete(Bundle values, FacebookException error) {
+							if (error == null) {
+								// When the story is posted, echo the success
+								// and the post Id.
+								final String postId = values.getString("post_id");
+								if (postId != null) {
+									Log.i("QFacebook", "Posted story, id: "+postId);
+								} else {
+									// User clicked the Cancel button
+									Log.i("QFacebook", "Publish cancelled");
+								}
+							} else if (error instanceof FacebookOperationCanceledException) {
+								// User clicked the "x" button
+								Log.i("QFacebook", "Publish cancelled");
+							} else {
+								// Generic, ex: network error
+								Log.e("QFacebook", "Error posting story");
+							}
+						}
+					});
+
+					WebDialog feedDialog = feedDialogBuilder.build();
+					feedDialog.show();
+				}
+			});
+		}
+	}
+
+
 	// The Session.StatusCallback method
 	@Override
 	public void call(Session session, SessionState state, Exception exception) {
@@ -159,8 +249,15 @@ public class QFacebookBinding implements Session.StatusCallback {
 			if (exception instanceof FacebookOperationCanceledException &&
 				!SessionState.OPENED_TOKEN_UPDATED.equals(state)) {
 				// HERE THE USER DID NOT ACCEPT SOMETHING
+				Log.i("QFacebook", "The user did not accept something...");
 			} else {
 				exception.printStackTrace();
+				Throwable cause = exception;
+				System.err.println(exception.getMessage());
+				while (cause.getCause() != null) {
+					cause = cause.getCause();
+					System.err.println(cause.getMessage());
+				}
 			}
 		}
 		// check the current state and acts accordlying

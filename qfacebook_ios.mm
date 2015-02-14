@@ -155,6 +155,10 @@ void QFacebook::publishPhoto( QPixmap photo, QString message ) {
 	}];
 }
 
+void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl ) {
+	qDebug() << "Publish link" << link << linkName << imageUrl << "NOT IMPLEMENTED";
+}
+
 void QFacebook::setAppID( QString appID ) {
 	if ( this->appID != appID ) {
 		this->appID = appID;
