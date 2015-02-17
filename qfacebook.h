@@ -96,6 +96,11 @@ public slots:
 	void login();
 	/*! close the Facebook session and clear any cached information */
 	void close();
+	/*! request information about the connected user (me)
+	 *  The data is returned into as a QVariantMap into the QVariant
+	 *  sent via operationDone signal
+	 */
+	void requestMe();
 	/*! request write permissions for publish on Facebook
 	 *  Call this method only after a successfull login to Facebook
 	 */
@@ -137,6 +142,12 @@ public slots:
 	void addRequestPermission( QString requestPermission );
 	/*! return the current granted permissions from the active Facebook session */
 	QStringList getGrantedPermissions();
+	/*! return the access token (only valid when a token has been loaded) */
+	QString getAccessToken();
+	/*! return the expire date of the access token (only valid when a token has been loaded)
+	 *  The data is returned as a string formatted into ISO format yyyy-MM-ddTHH:mm:ss.SSSZ
+	 */
+	QString getExpirationDate();
 signals:
 	void appIDChanged( QString appID );
 	void displayNameChanged( QString displayName );
@@ -146,10 +157,11 @@ signals:
 	void grantedPermissionsChanged( QStringList grantedPermissions );
 	/*! emitted when an operation is completed
 	 *  \param operation the name of the method called (i.e. publishPhoto)
+	 *  \param data eventually data returned by the operation completed
 	 *  \note login and close does not emit this signal; use connected and state properties
 	 *  to monitor login and close operations
 	 */
-	void operationDone( QString operation );
+	void operationDone( QString operation, QVariantMap data=QVariantMap() );
 	/*! emitted when an error occur during a Facebook operation
 	 *  \param operation the name of the method called (i.e. publishPhoto)
 	 *  \param error the error returned by Facebook

@@ -12,6 +12,8 @@ import java.util.List;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
 import java.lang.Thread;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 /*! Java class for bind the C++ method of QFacebook to the
  *  java implementation using the native Facebook SDK for Android
@@ -110,17 +112,60 @@ public class QFacebookBinding implements Session.StatusCallback {
 
 	// Perform the login into Facebook
 	static public void login() {
-		Session.OpenRequest request = new Session.OpenRequest(m_instance.activity);
-		request.setPermissions( m_instance.readPermissions );
 		createSessionIfNeeded();
-		Session.getActiveSession().openForRead( request );
-		Log.i("QFacebook", "Requesting Login to Facebook");
+		Session session = Session.getActiveSession();
+		if ( !session.isOpened() ) {
+			Session.OpenRequest request = new Session.OpenRequest(m_instance.activity);
+			request.setPermissions( m_instance.readPermissions );
+			session.openForRead( request );
+			Log.i("QFacebook", "Requesting Login to Facebook");
+		} else {
+			Session.NewPermissionsRequest readRequest =
+				new Session.NewPermissionsRequest(m_instance.activity, m_instance.readPermissions);
+			session.requestNewReadPermissions( readRequest );
+			Log.i("QFacebook", "Already connected to Facebook");
+		}
 	}
 
 	// Perform the logout and clear any token information
 	static public void close() {
 		createSessionIfNeeded();
 		Session.getActiveSession().closeAndClearTokenInformation();
+	}
+
+	// Request information about connected user (me)
+	static public void requestMe() {
+		Log.i("QFacebook", "Facebook start Request Me");
+		createSessionIfNeeded();
+		final Request request = Request.newMeRequest(Session.getActiveSession(),
+			new Request.GraphUserCallback() {
+			@Override
+			public void onCompleted(GraphUser user, Response response) {
+				FacebookRequestError error = response.getError();
+				// Some errors occurs
+				if ( error != null ) {
+					Log.i("QFacebook", "Response terminated with an Error");
+					operationError( "requestMe", error.getErrorMessage() );
+				} else {
+					// construct the array of string with key,value sequence
+					String[] data = {
+						"id", user.getId(),
+						"first_name", user.getFirstName(),
+						"last_name", user.getLastName(),
+						"email", user.getProperty("email").toString()
+					};
+					operationDone( "requestMe", data );
+				}
+			}
+		});
+		//Request.executeBatchAsync(request);
+		Thread thread = new Thread() {
+			@Override
+			public void run() {
+				Request.executeAndWait(request);
+			}
+		};
+		thread.start();
 	}
 
 	// Request the write permissions
@@ -142,8 +187,6 @@ public class QFacebookBinding implements Session.StatusCallback {
 				// The Request.Callback method
 				@Override
 				public void onCompleted(Response response) {
-					Log.i("QFacebook", "Publish Photo Request Completed");
-					operationDone( "publishPhoto" );
 					GraphObject graphObject = response.getGraphObject();
 					FacebookRequestError error = response.getError();
 					if ( graphObject != null ) {
@@ -151,6 +194,10 @@ public class QFacebookBinding implements Session.StatusCallback {
 					}
 					if ( error != null ) {
 						Log.i("QFacebook", "Response terminated with an Error");
+						operationError( "publishPhoto", error.getErrorMessage() );
+					} else {
+						Log.i("QFacebook", "Publish Photo Request Completed");
+						operationDone( "publishPhoto", new String[0] );
 					}
 				}
 			}
@@ -240,6 +287,20 @@ public class QFacebookBinding implements Session.StatusCallback {
 		}
 	}
 
+	// Return the access token
+	static public String getAccessToken() {
+		// Creating the session if it doesn't exist yet
+		createSessionIfNeeded();
+		return Session.getActiveSession().getAccessToken();
+	}
+
+	// Return the expiration date
+	static public String getExpirationDate() {
+		// Creating the session if it doesn't exist yet
+		createSessionIfNeeded();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.UK);
+		return sdf.format( Session.getActiveSession().getExpirationDate() );
+	}
 
 	// The Session.StatusCallback method
 	@Override
@@ -302,5 +363,7 @@ public class QFacebookBinding implements Session.StatusCallback {
 	// Send back to the private slot on QFacebook class
 	private static native void onFacebookStateChanged( int newstate, String[] grantedPermissions );
 	// Emit signal for operation done
-	private static native void operationDone( String operation );
+	private static native void operationDone( String operation, String[] data );
+	// Emit signal for operation error
+	private static native void operationError( String operation, String error );
 }

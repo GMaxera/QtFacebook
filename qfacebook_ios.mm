@@ -118,12 +118,28 @@ void QFacebook::close() {
 	[[FBSession activeSession] closeAndClearTokenInformation];
 }
 
+void QFacebook::requestMe() {
+	[FBRequestConnection
+		startForMeWithCompletionHandler:^(FBRequestConnection *connection, id<FBGraphUser> result, NSError *error) {
+		if (error) {
+			emit operationError( "requestMe", QString::fromNSString([error localizedDescription]) );
+		} else {
+			QVariantMap data;
+			data["id"] = QString::fromNSString(result.id);
+			data["first_name"] = QString::fromNSString(result[@"first_name"]);
+			data["last_name"] = QString::fromNSString(result[@"last_name"]);
+			data["email"] = QString::fromNSString(result[@"email"]);
+			emit operationDone( "requestMe", data );
+		}
+	}];
+}
+
 void QFacebook::requestPublishPermissions() {
 	[[FBSession activeSession] requestNewPublishPermissions:(data->writePermissions)
 		defaultAudience:FBSessionDefaultAudienceFriends
 		completionHandler:^( FBSession *session, NSError *error) {
 		if (error) {
-			emit operationError( "publishPhoto", QString::fromNSString([error localizedDescription]) );
+			emit operationError( "requestPublishPermissions", QString::fromNSString([error localizedDescription]) );
 		}
 	}];
 }
@@ -200,6 +216,20 @@ void QFacebook::addRequestPermission( QString requestPermission ) {
 		}
 		emit requestPermissionsChanged(requestPermissions);
 	}
+}
+
+QString QFacebook::getAccessToken() {
+	return QString::fromNSString([[[FBSession activeSession] accessTokenData] accessToken]);
+}
+
+QString QFacebook::getExpirationDate() {
+	NSDateFormatter* dateFormatter = [[NSDateFormatter alloc] init];
+	NSLocale* enUSPOSIXLocale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
+	[dateFormatter setLocale:enUSPOSIXLocale];
+	[dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"];
+
+	NSDate* date = [[[FBSession activeSession] accessTokenData] expirationDate];
+	return QString::fromNSString( [dateFormatter stringFromDate:date] );
 }
 
 void QFacebook::onApplicationStateChanged(Qt::ApplicationState state) {
