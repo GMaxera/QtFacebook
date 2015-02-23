@@ -245,7 +245,7 @@ public class QFacebookBinding implements Session.StatusCallback {
 			m_instance.activity.runOnUiThread(new Runnable() {
 				public void run() {
 					FacebookDialog shareDialog = new FacebookDialog.ShareDialogBuilder(m_instance.activity)
-						.setApplicationName("IlRibelle.com")
+						.setApplicationName(getString(R.string.app_name))
 						.setLink(link)
 						.setName(linkName)
 						.setPicture(imageUrl)
