@@ -303,7 +303,10 @@ static void fromJavaOnOperationDone(JNIEnv* env, jobject thiz, jstring operation
 		int count = env->GetArrayLength(data);
 		for( int i=0; i<count; i=i+2 ) {
 			QAndroidJniObject key( env->GetObjectArrayElement(data, i) );
-			QAndroidJniObject value( env->GetObjectArrayElement(data, i+1) );
+			QAndroidJniObject value;
+			if ((i+1) < count) {
+				value = env->GetObjectArrayElement(data, i+1);
+			}
 			dataMap[key.toString()] = value.toString();
 		}
 		QMetaObject::invokeMethod(QFacebook::instance(), "operationDone", Qt::QueuedConnection,
