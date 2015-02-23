@@ -28,6 +28,16 @@ public class QFacebookBinding implements Session.StatusCallback {
 	private Activity activity = null;
 	// Used by Facebook SDK for handling UI transitions
 	private UiLifecycleHelper uiLifecycleHelper = null;
+	// A string set to the name of the Facebook dialog which we launched and
+	// for which we are expecting notification via the uiLifecycleHelper.
+	// Perhaps we should synchronize access to this variable? We could read
+	// and modify it from different threads (though it is not so likely)
+	private String runningFacebookDialog;
+	// If this variable is not NULL, after a successful login is notified in
+	// call(), the operation is executed in the gui thread
+	private Runnable postLoginOperation = null;
+	// The name of the application
+	private String applicationName;
 	//! subset of requestPermissions that only allow reading from Facebook
 	ArrayList<String> readPermissions = new ArrayList<String>();
 	//! subset of requestPermissions that allow writing to Facebook
@@ -53,6 +63,10 @@ public class QFacebookBinding implements Session.StatusCallback {
 	//! Add a permission to the write permissions list
 	static public void writePermissionsAdd( String permission ) {
 		m_instance.writePermissions.add( permission );
+	}
+	//! Sets the application name
+	static public void setApplicationName( String appName ) {
+		m_instance.applicationName = appName;
 	}
 
 	//! This has to be called inside the onCreate of Activity
@@ -90,11 +104,13 @@ public class QFacebookBinding implements Session.StatusCallback {
 			@Override
 			public void onError(FacebookDialog.PendingCall pendingCall, Exception error, Bundle data) {
 				Log.e("Activity", String.format("Error: %s", error.toString()));
+				operationError(m_instance.runningFacebookDialog, error.toString());
 			}
 
 			@Override
 			public void onComplete(FacebookDialog.PendingCall pendingCall, Bundle data) {
 				Log.i("Activity", "Success!");
+				operationDone(m_instance.runningFacebookDialog, new String[0]);
 			}
 		});
 	}
@@ -225,17 +241,17 @@ public class QFacebookBinding implements Session.StatusCallback {
 	// the app. linkName is the name of the link, link is the link url, imageUrl is the url
 	// of the image associated wih the link.
 	static public void publishLinkViaShareDialog( final String linkName, final String link, final String imageUrl ) {
-		// Creating the session if it doesn't exist yet
-		createSessionIfNeeded();
-
 		// First of all checking if we can use the ShareDialog and using it if we can
 		if (FacebookDialog.canPresentShareDialog(m_instance.activity.getApplicationContext(), FacebookDialog.ShareDialogFeature.SHARE_DIALOG)) {
 			Log.i("QFacebook", "Publishing using Share Dialog");
+
+			m_instance.runningFacebookDialog = "publishLinkViaShareDialog";
 
 			// Publish the post using the Share Dialog. We start the dialog from the UI thread
 			m_instance.activity.runOnUiThread(new Runnable() {
 				public void run() {
 					FacebookDialog shareDialog = new FacebookDialog.ShareDialogBuilder(m_instance.activity)
+						.setApplicationName(m_instance.applicationName)
 						.setLink(link)
 						.setName(linkName)
 						.setPicture(imageUrl)
@@ -246,14 +262,14 @@ public class QFacebookBinding implements Session.StatusCallback {
 		} else {
 			Log.i("QFacebook", "Publishing using Feed Dialog");
 
-			// Falling back to using the Feed Dialog
+			// Falling back to using the Feed Dialog. We need to perform the login, first
+
+			// Creating the runnable to start after a successful login
 			final Bundle params = new Bundle();
 			params.putString("name", linkName);
 			params.putString("link", link);
 			params.putString("picture", imageUrl);
-
-			// Starting the Feed Dialog from the UI thread
-			m_instance.activity.runOnUiThread(new Runnable() {
+			m_instance.postLoginOperation = new Runnable() {
 				public void run() {
 					WebDialog.FeedDialogBuilder feedDialogBuilder = new WebDialog.FeedDialogBuilder(m_instance.activity, Session.getActiveSession(), params);
 
@@ -266,16 +282,25 @@ public class QFacebookBinding implements Session.StatusCallback {
 								final String postId = values.getString("post_id");
 								if (postId != null) {
 									Log.i("QFacebook", "Posted story, id: "+postId);
+									String[] data = new String[2];
+									// We fill array with a key followed by a value, as
+									// that is how C++ expects stuffs
+									data[0] = "postId";
+									data[1] = postId;
+									operationDone("publishLinkViaShareDialog", data);
 								} else {
 									// User clicked the Cancel button
-									Log.i("QFacebook", "Publish cancelled");
+									Log.i("QFacebook", "Publication cancelled");
+									operationError("publishLinkViaShareDialog", "Publication cancelled");
 								}
 							} else if (error instanceof FacebookOperationCanceledException) {
 								// User clicked the "x" button
 								Log.i("QFacebook", "Publish cancelled");
+								operationError("publishLinkViaShareDialog", "Publication cancelled");
 							} else {
 								// Generic, ex: network error
 								Log.e("QFacebook", "Error posting story");
+								operationError("publishLinkViaShareDialog", "Error posting story");
 							}
 						}
 					});
@@ -283,7 +308,10 @@ public class QFacebookBinding implements Session.StatusCallback {
 					WebDialog feedDialog = feedDialogBuilder.build();
 					feedDialog.show();
 				}
-			});
+			};
+
+			// Logging in. If login is successful, the postLoginOperation will be executed
+			login();
 		}
 	}
 
@@ -305,6 +333,8 @@ public class QFacebookBinding implements Session.StatusCallback {
 	// The Session.StatusCallback method
 	@Override
 	public void call(Session session, SessionState state, Exception exception) {
+		Log.i("QFacebook", "Inside the StatusCallback method");
+
 		// check if there was an exception
 		if (exception != null) {
 			if (exception instanceof FacebookOperationCanceledException &&
@@ -312,6 +342,7 @@ public class QFacebookBinding implements Session.StatusCallback {
 				// HERE THE USER DID NOT ACCEPT SOMETHING
 				Log.i("QFacebook", "The user did not accept something...");
 			} else {
+				// qui forse fare logout o segnare come logged out
 				exception.printStackTrace();
 				Throwable cause = exception;
 				System.err.println(exception.getMessage());
@@ -324,6 +355,7 @@ public class QFacebookBinding implements Session.StatusCallback {
 		// check the current state and acts accordlying
 		List<String> grantedPermissions;
 		String[] perms;
+		boolean runPostLoginOperation = false;
 		switch (state) {
 		case CLOSED:
 			Log.i("QFacebook", "Facebook State is CLOSED");
@@ -350,13 +382,20 @@ public class QFacebookBinding implements Session.StatusCallback {
 			grantedPermissions = session.getPermissions();
 			perms = grantedPermissions.toArray(new String[grantedPermissions.size()]);
 			onFacebookStateChanged( 3, perms );
+			runPostLoginOperation = true;
 		break;
 		case OPENED_TOKEN_UPDATED:
 			Log.i("QFacebook", "Facebook State is OPENED_TOKEN_UPDATED");
 			grantedPermissions = session.getPermissions();
 			perms = grantedPermissions.toArray(new String[grantedPermissions.size()]);
 			onFacebookStateChanged( 4, perms );
+			runPostLoginOperation = true;
 		break;
+		}
+
+		if (runPostLoginOperation && (m_instance.postLoginOperation != null)) {
+			m_instance.activity.runOnUiThread(m_instance.postLoginOperation);
+			m_instance.postLoginOperation = null;
 		}
 	}
 

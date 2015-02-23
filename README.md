@@ -51,6 +51,22 @@ How to use for Android platform
 ==========
 ## Prepare Facebook SDK for Android
 
+The first part of the instructions depends on whether you are using gradle to build the android part or not
+
+### Using gradle
+The Facebook android sdk is available from Maven Central, so you can avoid downloading the sdk directly. Simply open build.gradle and add the following lines just after "apply plugin: 'android'":
+```
+repositories {
+	mavenCentral()
+}
+```
+and the following line:
+```
+compile 'com.facebook.android:facebook-android-sdk:3.+'
+```
+inside the dependencies block (this will use the latest version of the facebook android sdk with major 3, you can substitute the + with a specific version or even remove the major for the latest version)
+
+### Not using gradle
 * Unzip the facebook android sdk package
 * Inside the unzipped directory, locate the subdirectory 'facebook' and copy it in another location (in a subdirectory of your Qt project it's fine)
 * Open the copied directory and in a command line window execute the following command to create a custom build.xml ant build file (select the version of android sdk you are using):
@@ -68,6 +84,8 @@ target=android-19
 ## Reference to the Facebook SDK
 android.library.reference.1=../../facebook
 ```
+
+### Integrating QtFacebook into your code
 * For a better integration of Facebook SDK, edit the AndroidManifest.xml and add the following tags into the <application> tag:
 ```
 <activity android:name="com.facebook.LoginActivity" android:label="@string/app_name" android:theme="@android:style/Theme.Translucent.NoTitleBar"></activity>
@@ -95,6 +113,7 @@ public class MyCustomAppActivity extends QtActivity {
 	public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
 		QFacebookBinding.onCreate(this, bundle);
+		QFacebookBinding.setApplicationName(getString(R.string.app_name));
 	}
 	@Override
 	protected void onResume() {
