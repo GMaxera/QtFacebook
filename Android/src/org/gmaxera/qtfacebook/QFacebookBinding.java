@@ -32,10 +32,12 @@ public class QFacebookBinding implements Session.StatusCallback {
 	// for which we are expecting notification via the uiLifecycleHelper.
 	// Perhaps we should synchronize access to this variable? We could read
 	// and modify it from different threads (though it is not so likely)
-	private static String runningFacebookDialog;
+	private String runningFacebookDialog;
 	// If this variable is not NULL, after a successful login is notified in
 	// call(), the operation is executed in the gui thread
-	private static Runnable postLoginOperation = null;
+	private Runnable postLoginOperation = null;
+	// The name of the application
+	private String applicationName;
 	//! subset of requestPermissions that only allow reading from Facebook
 	ArrayList<String> readPermissions = new ArrayList<String>();
 	//! subset of requestPermissions that allow writing to Facebook
@@ -61,6 +63,10 @@ public class QFacebookBinding implements Session.StatusCallback {
 	//! Add a permission to the write permissions list
 	static public void writePermissionsAdd( String permission ) {
 		m_instance.writePermissions.add( permission );
+	}
+	//! Sets the application name
+	static public void setApplicationName( String appName ) {
+		m_instance.applicationName = appName;
 	}
 
 	//! This has to be called inside the onCreate of Activity
@@ -98,13 +104,13 @@ public class QFacebookBinding implements Session.StatusCallback {
 			@Override
 			public void onError(FacebookDialog.PendingCall pendingCall, Exception error, Bundle data) {
 				Log.e("Activity", String.format("Error: %s", error.toString()));
-				operationError(runningFacebookDialog, error.toString());
+				operationError(m_instance.runningFacebookDialog, error.toString());
 			}
 
 			@Override
 			public void onComplete(FacebookDialog.PendingCall pendingCall, Bundle data) {
 				Log.i("Activity", "Success!");
-				operationDone(runningFacebookDialog, new String[0]);
+				operationDone(m_instance.runningFacebookDialog, new String[0]);
 			}
 		});
 	}
@@ -239,13 +245,13 @@ public class QFacebookBinding implements Session.StatusCallback {
 		if (FacebookDialog.canPresentShareDialog(m_instance.activity.getApplicationContext(), FacebookDialog.ShareDialogFeature.SHARE_DIALOG)) {
 			Log.i("QFacebook", "Publishing using Share Dialog");
 
-			runningFacebookDialog = "publishLinkViaShareDialog";
+			m_instance.runningFacebookDialog = "publishLinkViaShareDialog";
 
 			// Publish the post using the Share Dialog. We start the dialog from the UI thread
 			m_instance.activity.runOnUiThread(new Runnable() {
 				public void run() {
 					FacebookDialog shareDialog = new FacebookDialog.ShareDialogBuilder(m_instance.activity)
-						.setApplicationName(getString(R.string.app_name))
+						.setApplicationName(m_instance.applicationName)
 						.setLink(link)
 						.setName(linkName)
 						.setPicture(imageUrl)
@@ -263,7 +269,7 @@ public class QFacebookBinding implements Session.StatusCallback {
 			params.putString("name", linkName);
 			params.putString("link", link);
 			params.putString("picture", imageUrl);
-			postLoginOperation = new Runnable() {
+			m_instance.postLoginOperation = new Runnable() {
 				public void run() {
 					WebDialog.FeedDialogBuilder feedDialogBuilder = new WebDialog.FeedDialogBuilder(m_instance.activity, Session.getActiveSession(), params);
 
@@ -387,9 +393,9 @@ public class QFacebookBinding implements Session.StatusCallback {
 		break;
 		}
 
-		if (runPostLoginOperation && (postLoginOperation != null)) {
-			m_instance.activity.runOnUiThread(postLoginOperation);
-			postLoginOperation = null;
+		if (runPostLoginOperation && (m_instance.postLoginOperation != null)) {
+			m_instance.activity.runOnUiThread(m_instance.postLoginOperation);
+			m_instance.postLoginOperation = null;
 		}
 	}
 

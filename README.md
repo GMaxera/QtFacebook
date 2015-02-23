@@ -113,6 +113,7 @@ public class MyCustomAppActivity extends QtActivity {
 	public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
 		QFacebookBinding.onCreate(this, bundle);
+		QFacebookBinding.setApplicationName(getString(R.string.app_name));
 	}
 	@Override
 	protected void onResume() {
