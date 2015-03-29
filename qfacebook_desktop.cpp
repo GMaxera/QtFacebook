@@ -65,6 +65,10 @@ void QFacebook::close() {
 	onFacebookStateChanged(SessionClosed, QStringList());
 }
 
+void QFacebook::requestMe() {
+	qDebug() << "Request Me";
+}
+
 void QFacebook::requestPublishPermissions() {
 	// Directly calling slot
 	onFacebookStateChanged(SessionOpenTokenExtended, QStringList());
@@ -100,6 +104,14 @@ void QFacebook::addRequestPermission( QString requestPermission ) {
 		requestPermissions.append( requestPermission );
 		emit requestPermissionsChanged(requestPermissions);
 	}
+}
+
+QString QFacebook::getAccessToken() {
+	return QString();
+}
+
+QString QFacebook::getExpirationDate() {
+	return QString();
 }
 
 void QFacebook::onApplicationStateChanged(Qt::ApplicationState state) {
