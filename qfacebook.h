@@ -118,8 +118,10 @@ public slots:
 	 *  \param linkName the name of the link
 	 *  \param link the link url
 	 *  \param imageUrl is the url of the image associated wih the link
+	 *  \param caption the text to be used as caption
+	 *  \param description the test to be used as description
 	 */
-	void publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl );
+	void publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl, QString caption, QString description );
 
 	/*! return the application ID */
 	QString getAppID();

@@ -224,7 +224,7 @@ public class QFacebookBinding implements Session.StatusCallback {
 	// Feed Dialog. This function does not require the user to be logged into Facebook from
 	// the app. linkName is the name of the link, link is the link url, imageUrl is the url
 	// of the image associated wih the link.
-	static public void publishLinkViaShareDialog( final String linkName, final String link, final String imageUrl ) {
+	static public void publishLinkViaShareDialog( final String linkName, final String link, final String imageUrl, final String caption, final String description ) {
 		// Creating the session if it doesn't exist yet
 		createSessionIfNeeded();
 
@@ -239,6 +239,8 @@ public class QFacebookBinding implements Session.StatusCallback {
 						.setLink(link)
 						.setName(linkName)
 						.setPicture(imageUrl)
+						.setCaption(caption)
+						.setDescription(description)
 						.build();
 					m_instance.uiLifecycleHelper.trackPendingDialogCall(shareDialog.present());
 				}
@@ -251,6 +253,8 @@ public class QFacebookBinding implements Session.StatusCallback {
 			params.putString("name", linkName);
 			params.putString("link", link);
 			params.putString("picture", imageUrl);
+			params.putString("caption", caption);
+			params.putString("description", description);
 
 			// Starting the Feed Dialog from the UI thread
 			m_instance.activity.runOnUiThread(new Runnable() {

@@ -171,8 +171,33 @@ void QFacebook::publishPhoto( QPixmap photo, QString message ) {
 	}];
 }
 
-void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl ) {
-	qDebug() << "Publish link" << link << linkName << imageUrl << "NOT IMPLEMENTED";
+void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl, QString caption, QString description ) {
+	qDebug() << "Publish link" << link << linkName << imageUrl << caption << description;
+	FBShareDialogParams *params = [[FBShareDialogParams alloc] init];
+	params.link = [NSURL URLWithString:(link.toNSString())];
+	params.name = linkName.toNSString();
+	params.caption = caption.toNSString();
+	params.picture = [NSURL URLWithString:(imageUrl.toNSString())];
+	params.description = description.toNSString();
+	if ( [FBDialogs canPresentShareDialogWithParams:params] ) {
+		[FBDialogs presentShareDialogWithLink:params.link
+			name:params.name
+			caption:params.caption
+			description:params.description
+			picture:params.picture
+			clientState:nil
+			handler:^(FBAppCall *call, NSDictionary *results, NSError *error) {
+				if (error) {
+					emit operationError( "publishLinkViaShareDialog",
+										 QString::fromNSString([error localizedDescription]) );
+				} else {
+					emit operationDone( "publishLinkViaShareDialog" );
+				}
+			}
+		];
+	} else {
+		emit operationError( "publishLinkViaShareDialog", "Cannot present Facebook sharing dialog" );
+	}
 }
 
 void QFacebook::setAppID( QString appID ) {

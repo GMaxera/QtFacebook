@@ -145,16 +145,18 @@ void QFacebook::publishPhoto( QPixmap photo, QString message ) {
 	}
 }
 
-void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl ) {
-	qDebug() << "Publish link" << link << linkName << imageUrl;
+void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl, QString caption, QString description ) {
+	qDebug() << "Publish link" << link << linkName << imageUrl << caption << description;
 
 	// call the java implementation
 	QAndroidJniObject::callStaticMethod<void>(
 		data->jClassName.toLatin1().data(), "publishLinkViaShareDialog",
-		"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
+		"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
 		QAndroidJniObject::fromString(linkName).object<jstring>(),
 		QAndroidJniObject::fromString(link).object<jstring>(),
-		QAndroidJniObject::fromString(imageUrl).object<jstring>() );
+		QAndroidJniObject::fromString(imageUrl).object<jstring>(),
+		QAndroidJniObject::fromString(caption).object<jstring>(),
+		QAndroidJniObject::fromString(description).object<jstring>() );
 
 	// Checking exceptions
 	QAndroidJniEnvironment env;
