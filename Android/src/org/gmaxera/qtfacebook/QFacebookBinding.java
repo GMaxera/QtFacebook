@@ -240,14 +240,9 @@ public class QFacebookBinding implements Session.StatusCallback {
 	// Feed Dialog. This function does not require the user to be logged into Facebook from
 	// the app. linkName is the name of the link, link is the link url, imageUrl is the url
 	// of the image associated wih the link.
-<<<<<<< HEAD
 	static public void publishLinkViaShareDialog( final String linkName, final String link, final String imageUrl, final String caption, final String description ) {
 		// Creating the session if it doesn't exist yet
 		createSessionIfNeeded();
-
-=======
-	static public void publishLinkViaShareDialog( final String linkName, final String link, final String imageUrl ) {
->>>>>>> a4b498995c48980aa21d9ac5351988063bdbfed5
 		// First of all checking if we can use the ShareDialog and using it if we can
 		if (FacebookDialog.canPresentShareDialog(m_instance.activity.getApplicationContext(), FacebookDialog.ShareDialogFeature.SHARE_DIALOG)) {
 			Log.i("QFacebook", "Publishing using Share Dialog");
@@ -278,15 +273,10 @@ public class QFacebookBinding implements Session.StatusCallback {
 			params.putString("name", linkName);
 			params.putString("link", link);
 			params.putString("picture", imageUrl);
-<<<<<<< HEAD
 			params.putString("caption", caption);
 			params.putString("description", description);
 
-			// Starting the Feed Dialog from the UI thread
-			m_instance.activity.runOnUiThread(new Runnable() {
-=======
 			m_instance.postLoginOperation = new Runnable() {
->>>>>>> a4b498995c48980aa21d9ac5351988063bdbfed5
 				public void run() {
 					WebDialog.FeedDialogBuilder feedDialogBuilder = new WebDialog.FeedDialogBuilder(m_instance.activity, Session.getActiveSession(), params);
 
