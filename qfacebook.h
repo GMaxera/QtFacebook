@@ -122,6 +122,11 @@ public slots:
 	 *  \param description the test to be used as description
 	 */
 	void publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl, QString caption, QString description );
+	/*! Request the list of facebook friends using the app
+	 *  The list is returned via the signal operationDone into a QVariantMap at
+	 *  the key "friends" there will be a QStringList containing the facebookId of friends
+	 */
+	void requestMyFriends();
 
 	/*! return the application ID */
 	QString getAppID();

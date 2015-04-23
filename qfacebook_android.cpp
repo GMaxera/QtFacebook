@@ -169,6 +169,13 @@ void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QStri
 	}
 }
 
+void QFacebook::requestMyFriends() {
+	// NOT IMPLEMENTED YET
+	QVariantMap dataMap;
+	dataMap["friends"] = QStringList();
+	emit operationDone( "requestMyFriends", dataMap );
+}
+
 void QFacebook::setAppID( QString ) {
 
 }

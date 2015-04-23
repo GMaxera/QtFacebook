@@ -200,6 +200,27 @@ void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QStri
 	}
 }
 
+void QFacebook::requestMyFriends() {
+	// Issue a Facebook Graph API request to get your user's friend list
+	[FBRequestConnection startForMyFriendsWithCompletionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
+		if (!error) {
+			// result will contain an array with your user's friends in the "data" key
+			NSArray *friendObjects = [result objectForKey:@"data"];
+			// Create a list of friends' Facebook IDs
+			QStringList friendIds;
+			for (NSDictionary *friendObject in friendObjects) {
+				friendIds << QString::fromNSString([friendObject objectForKey:@"id"]);
+			}
+			QVariantMap dataMap;
+			dataMap["friends"] = friendIds;
+			emit operationDone( "requestMyFriends", dataMap );
+		} else {
+			emit operationError( "requestMyFriends",
+								 QString::fromNSString([error localizedDescription]) );
+		}
+	}];
+}
+
 void QFacebook::setAppID( QString appID ) {
 	if ( this->appID != appID ) {
 		this->appID = appID;
