@@ -114,6 +114,15 @@ void QFacebook::login() {
 	[fbSession openWithBehavior:FBSessionLoginBehaviorWithFallbackToWebView completionHandler:nil];
 }
 
+bool QFacebook::autoLogin() {
+	FBSession* fbSession = [[FBSession alloc] initWithPermissions:(data->readPermissions)];
+	[fbSession setStateChangeHandler:^(FBSession* session, FBSessionState state, NSError* error) {
+		data->sessionStateHandler(session, state, error);
+	}];
+	[FBSession setActiveSession:fbSession];
+	return [FBSession openActiveSessionWithAllowLoginUI:NO];
+}
+
 void QFacebook::close() {
 	[[FBSession activeSession] closeAndClearTokenInformation];
 }

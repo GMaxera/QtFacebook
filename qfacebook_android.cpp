@@ -74,6 +74,10 @@ void QFacebook::login() {
 	}
 }
 
+bool QFacebook::autoLogin() {
+	// NOT IMPLEMENTED YET
+}
+
 void QFacebook::close() {
 	// call the java implementation
 	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(), "close" );

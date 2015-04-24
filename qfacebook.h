@@ -94,6 +94,11 @@ public slots:
 	 *  the login.
 	 */
 	void login();
+	/*! try to login into facebook automatically take data from cache
+	 *  This call is synchronous !
+	 *  \return true if the login was successfull
+	 */
+	bool autoLogin();
 	/*! close the Facebook session and clear any cached information */
 	void close();
 	/*! request information about the connected user (me)
