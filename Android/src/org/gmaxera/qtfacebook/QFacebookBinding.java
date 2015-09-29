@@ -143,6 +143,12 @@ public class QFacebookBinding implements Session.StatusCallback {
 		}
 	}
 
+	// Perform an autologin into Facebook if possible
+	static public boolean autoLogin() {
+		createSessionIfNeeded();
+		return (Session.openActiveSession(m_instance.activity, false, m_instance) != null);
+	}
+
 	// Perform the logout and clear any token information
 	static public void close() {
 		createSessionIfNeeded();

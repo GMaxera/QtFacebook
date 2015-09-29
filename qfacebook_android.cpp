@@ -75,7 +75,20 @@ void QFacebook::login() {
 }
 
 bool QFacebook::autoLogin() {
-	// NOT IMPLEMENTED YET
+	// call the java implementation
+	jboolean logged = QAndroidJniObject::callStaticMethod<jboolean>( data->jClassName.toLatin1().data(), "autoLogin" );
+
+	// Checking exceptions
+	QAndroidJniEnvironment env;
+	if (env->ExceptionCheck()) {
+		// Printing exception message
+		env->ExceptionDescribe();
+
+		// Clearing exceptions
+		env->ExceptionClear();
+	}
+
+	return logged;
 }
 
 void QFacebook::close() {
