@@ -51,38 +51,17 @@ How to use for Android platform
 ==========
 ## Prepare Facebook SDK for Android
 
-The first part of the instructions depends on whether you are using gradle to build the android part or not
+These instructions are only for gradle.
 
-### Using gradle
-The Facebook android sdk is available from Maven Central, so you can avoid downloading the sdk directly. Simply open build.gradle and add the following lines just after "apply plugin: 'android'":
+The Facebook android sdk is available from Maven Central, so you can avoid downloading the sdk directly. Simply open build.gradle and add the following lines just before the dependencies section:
 ```
 repositories {
 	mavenCentral()
 }
 ```
-and the following line:
+and the following line into the dependencies section (note that QFacebook has been tested with Facebook SDK 4.6.0 only):
 ```
-compile 'com.facebook.android:facebook-android-sdk:3.+'
-```
-inside the dependencies block (this will use the latest version of the facebook android sdk with major 3, you can substitute the + with a specific version or even remove the major for the latest version)
-
-### Not using gradle
-* Unzip the facebook android sdk package
-* Inside the unzipped directory, locate the subdirectory 'facebook' and copy it in another location (in a subdirectory of your Qt project it's fine)
-* Open the copied directory and in a command line window execute the following command to create a custom build.xml ant build file (select the version of android sdk you are using):
-```
-android update project --path . --target android-19
-```
-* Add to the Qt project a custom Android package source directory
-```
-ANDROID_PACKAGE_SOURCE_DIR = $$PWD/Android
-```
-* In the Android package source directory add the project.properties file (or edit it) and append the following content (pay attention to android.library.reference.1, if you already added other library references you should ensure that the number is unique and progressive; moreover the path should be the relative path from your project android build directory to the directory with facebook sdk):
-```
-# Project target.
-target=android-19
-## Reference to the Facebook SDK
-android.library.reference.1=../../facebook
+compile 'com.facebook.android:facebook-android-sdk:4.6.0'
 ```
 
 ### Integrating QtFacebook into your code
