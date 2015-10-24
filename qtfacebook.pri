@@ -11,9 +11,9 @@ android {
 	QT += androidextras
 	SOURCES += $$PWD/qfacebook_android.cpp
 
-	QA_JAVASRC.path = /src/org/gmaxera/qtfacebook
-	QA_JAVASRC.files += $$files($$PWD/Android/src/org/gmaxera/qtfacebook/*)
-	INSTALLS += QA_JAVASRC
+	JAVASRC.path = /src/org/gmaxera/qtfacebook
+	JAVASRC.files += $$files($$PWD/Android/src/org/gmaxera/qtfacebook/*)
+	INSTALLS += JAVASRC
 } else:ios {
 	## the objective sources should be put in this variable
 	OBJECTIVE_SOURCES += \
@@ -23,4 +23,6 @@ android {
 		$$PWD/qfacebook_desktop.cpp
 }
 
-DISTFILES += $$PWD/Android/src/org/gmaxera/qtfacebook/QFacebookBinding.java
+OTHER_FILES += \
+	$$PWD/README.md
+

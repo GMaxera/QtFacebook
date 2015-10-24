@@ -6,6 +6,12 @@ Code for use Facebook SDK from C++ and Qt Quick 2 in Qt 5 projects targeted on m
 The aim of this project is to provide code to include into your Qt project in order to use Facebook functionality easily. Hence, it provides ready-to-use code for common scenarion of login and sharing with Facebook, but you need to manually install into your Qt project.
 Binary packages and plugins to install into Qt distributions are not provided.
 
+Include QtFacebook in your project including the qtfacebook.pri in your .pro file:
+```
+## include the QtFacebook library as project
+include(/Adjust/the/path/to/repos/QtFacebook/qtfacebook.pri)
+```
+
 How to use for iOS platform
 ==========
 ## Prepare Facebook SDK for iOS
@@ -15,13 +21,6 @@ How to use for iOS platform
 ```
 ## Facebook SDK framework
 LIBS += -F/path/to/FacebookSDK -framework FacebookSDK
-INCLUDEPATH += /path/to/QtFacebook
-HEADERS += \
-	/path/to/QtFacebook/qfacebook.h
-SOURCES += \
-	/path/to/QtFacebook/qfacebook.cpp
-OBJECTIVE_SOURCES += \
-	/path/to/QtFacebook/qfacebook_ios.mm
 ```
 * For a better integration with Facebook app, specify the application ID, display name and Url scheme into Info.plist:
 ```
@@ -59,9 +58,9 @@ repositories {
 	mavenCentral()
 }
 ```
-and the following line into the dependencies section (note that QFacebook has been tested with Facebook SDK 4.6.0 only):
+and the following line into the dependencies section (note that QFacebook has been tested with Facebook SDK 3.x only):
 ```
-compile 'com.facebook.android:facebook-android-sdk:4.6.0'
+compile 'com.facebook.android:facebook-android-sdk:3+'
 ```
 
 ### Integrating QtFacebook into your code
@@ -79,7 +78,6 @@ compile 'com.facebook.android:facebook-android-sdk:4.6.0'
 <string name="app_name">Display Name of Facebook App</string>
 <string name="app_id">2281942447348331</string>
 ```
-* Copy the Java bindings sources of QtFacebook into the 'src' folder of Android package source mantaining the directory structure (needed by Java to resolve the java packages). So, you should get a path like: Android/src/org/gmaxera/qtfacebook/QFacebookBinding.java
 * Create a custom Activity for your app extending from QtActivity (this is needed because there are some methods that interacts with Facebook login/share flows), and override the following methods:
 ```
 import org.qtproject.qt5.android.bindings.QtActivity;
@@ -121,18 +119,19 @@ public class MyCustomAppActivity extends QtActivity {
 	}
 }
 ```
-* In your Qt project add the following option:
-```
-android: QT += androidextras
-INCLUDEPATH += /path/to/QtFacebook
-HEADERS += \
-	/path/to/QtFacebook/qfacebook.h
-SOURCES += \
-	/path/to/QtFacebook/qfacebook.cpp
-android: SOURCES += /path/to/QtFacebook/qfacebook_android.cpp
-```
 
 ## Warnings and Know issues
+
+### ANDROID_PACKAGE_SOURCE_DIR Problem with QtFacebook
+If in your project you setup the ANDROID_PACKAGE_SOURCE_DIR and if the directory specified contains a "src" subdirectory, then all java source files from QtFacebook will not copied. For avoid this problem use the following workaround:
+* move your "src" directory outside ANDROID_PACKAGE_SOURCE_DIR
+* install your java file using the following method:
+```
+ANDROID_JAVA_SRCS.path = /src/com/yourpackage/name/
+ANDROID_JAVA_SRCS.files = $$files($$PWD/java/*.java)
+INSTALLS += ANDROID_JAVA_SRCS
+```
+
 ### Multiple definition of JNI_OnLoad
 In order to register native methods for the Java binding, the source code define and implement the JNI_OnLoad for doing the registration of native methods. If the source code is included into a project that already defines the JNI_OnLoad for some other custom java binding, then this error arise.
 To solve it, define into the .pro the following define:
@@ -152,25 +151,7 @@ jint JNICALL JNI_OnLoad(JavaVM *vm, void* ptr) {
 How to use for Desktop
 ==========
 
-QtFacebook does not really provide integration for desktop applications. It does provide, however a dummy implementation of Facebook requests. This is useful because it permits to run your application on a desktop (e.g. to test other features) and to some very basic tests on facebook integration (e.g. to test if your code reacts correctly to a successful facebook login). To integrate the desktop version of QtFacebook you only need to do change your Qt project file (and follow the instructions in "How to use in Qt Quick"):
-
-INCLUDEPATH += /path/to/QtFacebook
-HEADERS += \
-	/path/to/QtFacebook/qfacebook.h
-SOURCES += \
-	/path/to/QtFacebook/qfacebook.cpp \
-	/path/to/QtFacebook/qfacebook_desktop.cpp
-
-If you use the same project file for both desktop and e.g. android you can do the following:
-
-INCLUDEPATH += /path/to/QtFacebook
-HEADERS += \
-	/path/to/QtFacebook/qfacebook.h
-SOURCES += \
-	/path/to/QtFacebook/qfacebook.cpp
-
-android: SOURCES += /path/to/QtFacebook/qfacebook_android.cpp
-else: SOURCES += /path/to/QtFacebook/qfacebook_desktop.cpp
+QtFacebook does not really provide integration for desktop applications. It does provide, however a dummy implementation of Facebook requests. This is useful because it permits to run your application on a desktop (e.g. to test other features) and to some very basic tests on facebook integration (e.g. to test if your code reacts correctly to a successful facebook login).
 
 How to use in Qt Quick
 ==========
