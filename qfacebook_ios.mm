@@ -182,12 +182,14 @@ void QFacebook::publishPhoto( QPixmap photo, QString message ) {
 
 void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl, QString caption, QString description ) {
 	qDebug() << "Publish link" << link << linkName << imageUrl << caption << description;
-	FBShareDialogParams *params = [[FBShareDialogParams alloc] init];
-	params.link = [NSURL URLWithString:(link.toNSString())];
-	params.name = linkName.toNSString();
-	params.caption = caption.toNSString();
-	params.picture = [NSURL URLWithString:(imageUrl.toNSString())];
-	params.description = description.toNSString();
+	FBLinkShareParams* params = [[FBLinkShareParams alloc]
+		initWithLink:[NSURL URLWithString:(link.toNSString())]
+		name: linkName.toNSString()
+		caption: caption.toNSString()
+		description: description.toNSString()
+		picture: [NSURL URLWithString:(imageUrl.toNSString())]
+	];
+	
 	if ( [FBDialogs canPresentShareDialogWithParams:params] ) {
 		[FBDialogs presentShareDialogWithLink:params.link
 			name:params.name
