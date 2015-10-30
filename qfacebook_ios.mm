@@ -184,10 +184,10 @@ void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QStri
 	qDebug() << "Publish link" << link << linkName << imageUrl << caption << description;
 	FBLinkShareParams* params = [[FBLinkShareParams alloc]
 		initWithLink:[NSURL URLWithString:(link.toNSString())]
-		name: linkName.toNSString()
-		caption: caption.toNSString()
-		description: description.toNSString()
-		picture: [NSURL URLWithString:(imageUrl.toNSString())]
+		name: (linkName.isEmpty() ? nil : linkName.toNSString())
+		caption: (caption.isEmpty() ? nil : caption.toNSString())
+		description: (description.isEmpty() ? nil : description.toNSString())
+		picture: (imageUrl.isEmpty() ? nil : [NSURL URLWithString:(imageUrl.toNSString())])
 	];
 	
 	if ( [FBDialogs canPresentShareDialogWithParams:params] ) {
