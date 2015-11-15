@@ -60,6 +60,11 @@ void QFacebook::login() {
 	onFacebookStateChanged(SessionOpen, QStringList());
 }
 
+bool QFacebook::autoLogin() {
+    // NOT IMPLEMENTED YET
+    return false;
+}
+
 void QFacebook::close() {
 	// Directly calling slot
 	onFacebookStateChanged(SessionClosed, QStringList());
@@ -79,8 +84,15 @@ void QFacebook::publishPhoto( QPixmap photo, QString message ) {
 	qDebug() << "Publish Photo" << photo.size() << message;
 }
 
-void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl ) {
+void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl, QString caption, QString description ) {
 	qDebug() << "Publish link" << link << linkName << imageUrl;
+}
+
+void QFacebook::requestMyFriends() {
+    // NOT IMPLEMENTED YET
+    QVariantMap dataMap;
+    dataMap["friends"] = QStringList();
+    emit operationDone( "requestMyFriends", dataMap );
 }
 
 void QFacebook::setAppID( QString appID ) {
