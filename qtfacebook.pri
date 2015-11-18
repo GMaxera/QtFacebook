@@ -24,5 +24,6 @@ android {
 }
 
 OTHER_FILES += \
-	$$PWD/README.md
+        $$PWD/README.md \
+        $$files($$PWD/Android/src/org/gmaxera/qtfacebook/*)
 
