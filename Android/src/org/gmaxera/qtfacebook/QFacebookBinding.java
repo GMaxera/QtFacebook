@@ -190,6 +190,42 @@ public class QFacebookBinding implements Session.StatusCallback {
 		thread.start();
 	}
 
+	// Request information about my friends
+	static public void requestMyFriends() {
+		Log.i("QFacebook", "Facebook start Request My Friends");
+		createSessionIfNeeded();
+		final Request request = Request.newMyFriendsRequest(Session.getActiveSession(),
+			new Request.GraphUserListCallback() {
+			@Override
+			public void onCompleted(List<GraphUser> friends, Response response) {
+				FacebookRequestError error = response.getError();
+				// Some errors occurs
+				if ( error != null ) {
+					Log.i("QFacebook", "Response terminated with an Error");
+					operationError( "requestMyFriends", error.getErrorMessage() );
+				} else {
+					// construct the array of string with key,value sequence
+					String friendsList = "";
+					if (friends != null) {
+						for (GraphUser user : friends) {
+							friendsList = friendsList.concat( user.getId() ).concat(",");
+						}
+					}
+					String[] data = { "friends:list", friendsList };
+					operationDone( "requestMyFriends", data );
+				}
+			}
+		});
+		//Request.executeBatchAsync(request);
+		Thread thread = new Thread() {
+			@Override
+			public void run() {
+				Request.executeAndWait(request);
+			}
+		};
+		thread.start();
+	}
+
 	// Request the write permissions
 	static public void requestPublishPermissions() {
 		Session.NewPermissionsRequest request = new Session.NewPermissionsRequest(m_instance.activity, m_instance.writePermissions);

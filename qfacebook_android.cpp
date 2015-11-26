@@ -187,10 +187,18 @@ void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QStri
 }
 
 void QFacebook::requestMyFriends() {
-	// NOT IMPLEMENTED YET
-	QVariantMap dataMap;
-	dataMap["friends"] = QStringList();
-	emit operationDone( "requestMyFriends", dataMap );
+	// call the java implementation
+	QAndroidJniObject::callStaticMethod<void>( data->jClassName.toLatin1().data(), "requestMyFriends" );
+
+	// Checking exceptions
+	QAndroidJniEnvironment env;
+	if (env->ExceptionCheck()) {
+		// Printing exception message
+		env->ExceptionDescribe();
+
+		// Clearing exceptions
+		env->ExceptionClear();
+	}
 }
 
 void QFacebook::setAppID( QString ) {
@@ -333,7 +341,13 @@ static void fromJavaOnOperationDone(JNIEnv* env, jobject thiz, jstring operation
 			if ((i+1) < count) {
 				value = env->GetObjectArrayElement(data, i+1);
 			}
-			dataMap[key.toString()] = value.toString();
+			QString qkey = key.toString();
+			if ( qkey.endsWith(":list") ) {
+				qkey.chop(5);
+				dataMap[qkey] = value.toString().split(',', QString::SkipEmptyParts);
+			} else {
+				dataMap[qkey] = value.toString();
+			}
 		}
 		QMetaObject::invokeMethod(QFacebook::instance(), "operationDone", Qt::QueuedConnection,
 			Q_ARG(QString, operationQ),
