@@ -25,6 +25,7 @@
 #include <QPixmap>
 
 class QFacebookPlatformData;
+class QQuickItemGrabResult;
 
 #ifdef QFACEBOOK_NOT_DEFINE_JNI_ONLOAD
 typedef struct _JavaVM JavaVM;
@@ -115,6 +116,12 @@ public slots:
 	 *  \param message an optional description of the photo that will be shown in the feed story
 	 */
 	void publishPhoto( QPixmap photo, QString message=QString() );
+    /*! post a photo to the user wall
+     *  \param result the QQuickItem::grabToImage() result will be uploaded to the user album on Facebook
+     *  \param message an optional description of the photo that will be shown in the feed story
+     */
+    void publishQuickItemGrabResult( QQuickItemGrabResult *result, QString message=QString() );
+
 	/*! Publish a link with a photo using Share Dialog.
 	 *
 	 *  If the Share Dialog is not available (e.g. because the user hasn't the Facebook app installed),
