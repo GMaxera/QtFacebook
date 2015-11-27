@@ -18,6 +18,7 @@
  * ********************************************************************** */
 
 #include "qfacebook.h"
+#include <QQuickItemGrabResult>
 
 QObject* QFacebook::qFacebookProvider(QQmlEngine *engine, QJSEngine *scriptEngine) {
 	Q_UNUSED(engine)
@@ -88,3 +89,7 @@ bool QFacebook::isReadPermission( QString permission ) {
 	return knowRead.contains( permission );
 }
 
+void QFacebook::publishQuickItemGrabResult(QQuickItemGrabResult *result, QString message)
+{
+    publishPhoto(QPixmap::fromImage(result->image()), message);
+}
