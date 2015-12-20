@@ -182,12 +182,15 @@ void QFacebook::publishPhoto( QPixmap photo, QString message ) {
 
 void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl, QString caption, QString description ) {
 	qDebug() << "Publish link" << link << linkName << imageUrl << caption << description;
+	// escaping the URL
+	NSString* linkEscaped = [(link.toNSString()) stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+	NSString* imageEscaped = [(imageUrl.toNSString()) stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 	FBLinkShareParams* params = [[FBLinkShareParams alloc]
-		initWithLink:[NSURL URLWithString:(link.toNSString())]
+		initWithLink:[NSURL URLWithString:linkEscaped]
 		name: (linkName.isEmpty() ? nil : linkName.toNSString())
 		caption: (caption.isEmpty() ? nil : caption.toNSString())
 		description: (description.isEmpty() ? nil : description.toNSString())
-		picture: (imageUrl.isEmpty() ? nil : [NSURL URLWithString:(imageUrl.toNSString())])
+		picture: (imageUrl.isEmpty() ? nil : [NSURL URLWithString:imageEscaped])
 	];
 	
 	if ( [FBDialogs canPresentShareDialogWithParams:params] ) {
