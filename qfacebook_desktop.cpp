@@ -84,6 +84,11 @@ void QFacebook::publishPhoto( QPixmap photo, QString message ) {
 	qDebug() << "Publish Photo" << photo.size() << message;
 }
 
+void QFacebook::publishPhotosViaShareDialog(QVariantList photos)
+{
+    qDebug() << "Publish Photos" << photos.size();
+}
+
 void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl, QString caption, QString description ) {
 	qDebug() << "Publish link" << link << linkName << imageUrl;
 }

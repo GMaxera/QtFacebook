@@ -180,6 +180,11 @@ void QFacebook::publishPhoto( QPixmap photo, QString message ) {
 	}];
 }
 
+void QFacebook::publishPhotosViaShareDialog(QVariantList photos)
+{
+    qDebug() << "Publish Photos" << photos.size();
+}
+
 void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl, QString caption, QString description ) {
 	qDebug() << "Publish link" << link << linkName << imageUrl << caption << description;
 	// escaping the URL

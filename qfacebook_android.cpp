@@ -22,7 +22,51 @@
 #include <QtAndroidExtras>
 #include <QByteArray>
 #include <QBuffer>
+#include <QQuickItemGrabResult>
 #include <QDebug>
+
+static jobjectArray createPixmapList( QAndroidJniEnvironment &env, const QVariantList &photos )
+{
+    // Get the byte array class
+    jclass byteArrayClass = env->FindClass( "[B" );
+
+    // Check if we properly got the byte array class
+    if( !byteArrayClass )
+    {
+        qWarning() << "Can not get byte array class";
+        return nullptr;
+    }
+
+    // Create the 2D array
+    jobjectArray photosArray = env->NewObjectArray( photos.size(), byteArrayClass, nullptr );
+
+    // Go through the firs dimension and add the second dimension arrays
+    for( int i = 0; i < photos.size(); ++i )
+    {
+        QByteArray imgData;
+        QBuffer buffer( &imgData );
+        buffer.open( QIODevice::WriteOnly );
+
+        const QVariant &var = photos.at( i );
+
+        if (var.canConvert<QPixmap>()) {
+            var.value<QPixmap>().save( &buffer, "PNG" );
+        } else if (var.canConvert<QQuickItemGrabResult*>()) {
+            QQuickItemGrabResult *grabResult = var.value<QQuickItemGrabResult*>();
+            QPixmap::fromImage( grabResult->image() ).save( &buffer, "PNG" );
+        } else {
+            qWarning() << "Incorrect value for photos";
+            continue;
+        }
+
+        jbyteArray imgBytes = env->NewByteArray( imgData.size() );
+        env->SetByteArrayRegion( imgBytes, 0, imgData.size(), ( jbyte* )imgData.constData()) ;
+        env->SetObjectArrayElement( photosArray, i, imgBytes );
+        env->DeleteLocalRef( imgBytes );
+    }
+
+    return photosArray;
+}
 
 class QFacebookPlatformData {
 public:
@@ -160,6 +204,39 @@ void QFacebook::publishPhoto( QPixmap photo, QString message ) {
 		// Clearing exceptions
 		env->ExceptionClear();
 	}
+}
+
+void QFacebook::publishPhotosViaShareDialog( QVariantList photos )
+{
+    qDebug() << "Publish Photos" << photos.size();
+
+    QAndroidJniEnvironment env;
+    jobjectArray photosArray = nullptr;
+
+    if( !photos.isEmpty() )
+    {
+        photosArray = createPixmapList( env, photos );
+
+        if( !photosArray )
+        {
+            qWarning() << "Can not create photos array";
+            return;
+        }
+    }
+
+    // call the java implementation
+    QAndroidJniObject::callStaticMethod<void>(data->jClassName.toLatin1().data(),
+                                              "publishPhotosViaShareDialog", "([[B)V",
+                                              photosArray );
+
+    // Checking exceptions
+    if (env->ExceptionCheck()) {
+        // Printing exception message
+        env->ExceptionDescribe();
+
+        // Clearing exceptions
+        env->ExceptionClear();
+    }
 }
 
 void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl, QString caption, QString description ) {
