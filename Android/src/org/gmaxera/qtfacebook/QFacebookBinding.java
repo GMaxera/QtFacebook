@@ -14,6 +14,7 @@ import android.graphics.Bitmap;
 import java.lang.Thread;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import java.util.Collection;
 
 /*! Java class for bind the C++ method of QFacebook to the
  *  java implementation using the native Facebook SDK for Android
@@ -281,6 +282,44 @@ public class QFacebookBinding implements Session.StatusCallback {
 		};
 		thread.start();
 	}
+
+        // Publish a photo using Photo Share Dialog. If the Photo Share Dialog is not available
+        // (e.g. because the user hasn't the Facebook app installed), then do nothing
+        // (TODO: Fix it, try to using Feed Dialog).
+        // This function does not require the user to be logged into Facebook from the app.
+        // imgBytes is photos in byte array presentation.
+        static public void publishPhotosViaShareDialog( final byte[][] imgBytes ) {
+                // Creating the session if it doesn't exist yet
+                createSessionIfNeeded();
+
+                // First of all checking if we can use the PhotoShareDialog and using it if we can
+                if (FacebookDialog.canPresentShareDialog(m_instance.activity.getApplicationContext(),
+						FacebookDialog.ShareDialogFeature.SHARE_DIALOG,
+						FacebookDialog.ShareDialogFeature.PHOTOS)) {
+                        Log.i("QFacebook", "Publishing using Photo Share Dialog");
+
+                        m_instance.runningFacebookDialog = "publishPhotosViaShareDialog";
+
+                        // Publish the post using the Photo Share Dialog. We start the dialog from the UI thread
+                        m_instance.activity.runOnUiThread(new Runnable() {
+                                public void run() {
+									Collection<Bitmap> photos = new ArrayList<Bitmap>();
+									for( byte[] img : imgBytes ) {
+										Bitmap bitmap = BitmapFactory.decodeByteArray(img, 0, img.length);
+										photos.add(bitmap);
+									}
+
+									FacebookDialog photoShareDialog = new FacebookDialog.PhotoShareDialogBuilder(m_instance.activity)
+											.setApplicationName(m_instance.applicationName)
+											.addPhotos(photos)
+											.build();
+									m_instance.uiLifecycleHelper.trackPendingDialogCall(photoShareDialog.present());
+                                }
+                        });
+                } else {
+                        Log.w("QFacebook", "Can not publish photo because facebook app is not installed");
+                }
+        }
 
 	// Publish a link with a photo using Share Dialog. If the Share Dialog is not available
 	// (e.g. because the user hasn't the Facebook app installed), falls back to using the

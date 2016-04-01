@@ -122,6 +122,16 @@ public slots:
      */
     void publishQuickItemGrabResult( QQuickItemGrabResult *result, QString message=QString() );
 
+    /*! Publish a photo using Photo Share Dialog.
+     *
+     *  If the Photo Share Dialog is not available
+     *  (e.g. because the user hasn't the Facebook app installed), then do nothing
+     *  (TODO: Fix it, try to using Feed Dialog).
+     *  This function does not require the user to be logged into Facebook from the app.
+     *  \param photos photos to publish, supported types: QPixmap and QQuickItemGrabResult
+     */
+    void publishPhotosViaShareDialog( QVariantList photos );
+
 	/*! Publish a link with a photo using Share Dialog.
 	 *
 	 *  If the Share Dialog is not available (e.g. because the user hasn't the Facebook app installed),
