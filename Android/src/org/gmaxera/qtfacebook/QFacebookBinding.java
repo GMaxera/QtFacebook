@@ -165,16 +165,21 @@ public class QFacebookBinding implements Session.StatusCallback {
 			public void onCompleted(GraphUser user, Response response) {
 				FacebookRequestError error = response.getError();
 				// Some errors occurs
-				if ( error != null ) {
+				if ( error != null || user == null ) {
 					Log.i("QFacebook", "Response terminated with an Error");
 					operationError( "requestMe", error.getErrorMessage() );
 				} else {
 					// construct the array of string with key,value sequence
+					String email = "";
+					if ( user.getProperty("email") != null ) {
+						// user got a valid email
+						email = user.getProperty("email").toString();
+					}
 					String[] data = {
 						"id", user.getId(),
 						"first_name", user.getFirstName(),
 						"last_name", user.getLastName(),
-						"email", user.getProperty("email").toString()
+						"email", email
 					};
 					operationDone( "requestMe", data );
 				}
