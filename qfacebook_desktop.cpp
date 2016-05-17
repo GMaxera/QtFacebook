@@ -90,7 +90,7 @@ void QFacebook::publishPhotosViaShareDialog(QVariantList photos)
 }
 
 void QFacebook::publishLinkViaShareDialog( QString linkName, QString link, QString imageUrl, QString caption, QString description ) {
-	qDebug() << "Publish link" << link << linkName << imageUrl;
+    qDebug() << "Publish link" << link << linkName << imageUrl << caption << description;
 }
 
 void QFacebook::requestMyFriends() {
