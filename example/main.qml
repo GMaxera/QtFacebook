@@ -4,15 +4,19 @@ import org.qtproject.example 1.0
 import QtQuick.Controls 1.4
 import "."
 
+/*
+ * This is a sample project, that demonstrates how to use QtFacebook.
+ * Currently, only the android target is supported.
+ *
+ * In order to use that sample project, change app_name and app_id in android/res/values/strings.xml
+ * accordingly.
+ */
+
 Window {
     property var facebook : Facebook
     width: 400
     height: 600
     visible: true
-
-    /*Facebook{
-        id: facebook
-    }*/
 
     Loader{
         id: screenLoader
@@ -37,14 +41,13 @@ Window {
     Connections {
         target: facebook
         onConnectedChanged: {
-            //connected, switch to MainScreen
             if(facebook.connected){
+                //connected, switch to MainScreen
                 console.log("Sucessfully connected...loading data for MainScreen")
-                console.log("Granted permissions " +facebook.getGrantedPermissions())
-                facebook.addRequestPermission("public_profile")
                 facebook.requestMe()
             }
             else{
+                //disconnected, switch to LoginScreen
                 console.log("Sucessfully disconnected...switching to LoginScreen")
                 screenLoader.source = "LoginScreen.qml"
             }
@@ -52,17 +55,11 @@ Window {
 
         onOperationDone: {
             if(operation === "requestMe"){
-                console.log("operation done " +JSON.stringify(data))
+                console.log("Loaded data for MainScreen...switching to MainScreen")
+                screenLoader.source = "MainScreen.qml"
+                screenLoader.item.firstname = data["first_name"];
+                screenLoader.item.lastname = data["last_name"];
             }
         }
     }
-
-
-    /*MouseArea {
-        anchors.fill: parent
-        onClicked: {
-            console.log("login1");
-            facebook.login()
-        }
-    }*/
 }

@@ -5,12 +5,17 @@ import QtQuick.Controls 1.4
 Rectangle{
     id: mainScreen
     objectName: "MainScreen"
-    //anchors.fill: parent
-    signal facebookButtonClicked(string screenName)
-    signal loadData()
+    property string firstname: "";
+    property string lastname: "";
 
-    onLoadData: {
-        console.log("load data")
+    signal facebookButtonClicked(string screenName)
+
+    Label{
+        id: greeting
+        text: "Hello " + firstname + " " + lastname
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.topMargin: 100
     }
 
     Button{
@@ -20,6 +25,7 @@ Rectangle{
         anchors.verticalCenter: parent.verticalCenter
         anchors.leftMargin: 5
         anchors.rightMargin: 5
+        anchors.topMargin: 50
 
         Text{
             anchors.fill: parent
