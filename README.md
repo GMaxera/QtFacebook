@@ -22,6 +22,7 @@ How to use for iOS platform
 ## Facebook SDK framework
 LIBS += -F/path/to/FacebookSDK -framework FacebookSDK
 ```
+**Important Info:** This only works with iOs Facebook SDK version *3.x* 
 * For a better integration with Facebook app, specify the application ID, display name and Url scheme into Info.plist:
 ```
 <key>CFBundleDisplayName</key>
